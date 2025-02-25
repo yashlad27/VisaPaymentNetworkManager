@@ -20,6 +20,11 @@ public class VisaPaymentNetworkManager extends JFrame {
 
   private JLabel statusLabel;
   private JButton connectButton;
+  private JTextArea queryTextArea;
+  private JTable resultTable;
+  private DefaultTableModel tableModel;
+  private JButton executeButton;
+  private JButton clearButton;
 
   public VisaPaymentNetworkManager() {
     setTitle("Visa Payment Network Manager");
@@ -37,7 +42,7 @@ public class VisaPaymentNetworkManager extends JFrame {
 
     JTabbedPane tabbedPane = new JTabbedPane();
 
-    JPanel queryPanel = new JPanel();
+    JPanel queryPanel = createQueryTab();
     JPanel crudPanel = new JPanel();
     JPanel joinsPanel = new JPanel();
     JPanel viewsPanel = new JPanel();
@@ -63,6 +68,51 @@ public class VisaPaymentNetworkManager extends JFrame {
     setContentPane(mainPanel);
   }
 
+  private JPanel createQueryTab() {
+    JPanel queryPanel = new JPanel(new BorderLayout());
+    queryPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+    // query input area
+    queryTextArea = new JTextArea();
+    queryTextArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
+    JScrollPane queryScrollPane = new JScrollPane(queryTextArea);
+    queryScrollPane.setPreferredSize(new Dimension(400, 150));
+
+    // button panel
+    JPanel buttonPanel = new JPanel();
+    executeButton = new JButton("Execute Query");
+    clearButton = new JButton("Clear");
+
+    executeButton.addActionListener(e -> executeQuery());
+    clearButton.addActionListener(e -> queryTextArea.setText(""));
+
+    // initially disabled
+    executeButton.setEnabled(false);
+    clearButton.setEnabled(false);
+
+    buttonPanel.add(executeButton);
+    buttonPanel.add(clearButton);
+
+    // query panel north section
+    JPanel queryNorthPanel = new JPanel(new BorderLayout());
+    queryNorthPanel.add(queryScrollPane, BorderLayout.CENTER);
+    queryNorthPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+    // results table
+    tableModel = new DefaultTableModel();
+    resultTable = new JTable(tableModel);
+    JScrollPane resultScrollPane = new JScrollPane(resultTable);
+
+    // add components to query panel
+    queryPanel.add(queryNorthPanel, BorderLayout.NORTH);
+    queryPanel.add(resultScrollPane, BorderLayout.CENTER);
+
+    return queryPanel;
+  }
+
+  private void executeQuery() {
+  }
+
   private void connectToDatabase() {
     try {
       Class.forName("com.mysql.cj.jdbc.Driver");
@@ -72,6 +122,9 @@ public class VisaPaymentNetworkManager extends JFrame {
 
       statusLabel.setText("Connected to db");
       connectButton.setEnabled(false);
+
+      executeButton.setEnabled(true);
+      clearButton.setEnabled(true);
 
       JOptionPane.showMessageDialog(this, "Successfully connected to the db",
               "Connection Status", JOptionPane.INFORMATION_MESSAGE);
