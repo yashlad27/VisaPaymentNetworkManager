@@ -10,12 +10,12 @@ import javax.swing.border.EmptyBorder;
 import database.DatabaseManager;
 
 public class VisaPaymentNetworkManager extends JFrame {
-  // Database connection details
+  // database connection details
   private static final String DB_URL = "jdbc:mysql://localhost:3306/visa_payment_network";
   private static final String DB_USER = "root";
   private static final String DB_PASSWORD = "test123"; // Set your database password here
 
-  // Database manager
+  // database manager
   private DatabaseManager dbManager;
 
   // UI Components
@@ -67,15 +67,15 @@ public class VisaPaymentNetworkManager extends JFrame {
     crudPanel = new CRUDPanel();
     joinsPanel = new JoinsPanel();
     viewsPanel = new ViewsPanel();
-//    aggregatesPanel = new AggregatesPanel();
+    //aggregatesPanel = new AggregatesPanel();
 
     // Create tabbed pane
     tabbedPane = new JTabbedPane();
     tabbedPane.addTab("Custom Query", queryPanel);
-//    tabbedPane.addTab("CRUD Operations", crudPanel);
-//    tabbedPane.addTab("Joins", joinsPanel);
-//    tabbedPane.addTab("Views", viewsPanel);
-//    tabbedPane.addTab("Aggregates", aggregatesPanel);
+    tabbedPane.addTab("CRUD Operations", crudPanel);
+    tabbedPane.addTab("Joins", joinsPanel);
+    tabbedPane.addTab("Views", viewsPanel);
+    //tabbedPane.addTab("Aggregates", aggregatesPanel);
 
     // Add the tabbed pane to the main panel
     mainPanel.add(tabbedPane, BorderLayout.CENTER);
@@ -103,10 +103,10 @@ public class VisaPaymentNetworkManager extends JFrame {
 
       // Notify all panels that connection is established
       queryPanel.onDatabaseConnected();
-//      crudPanel.onDatabaseConnected();
-//      joinsPanel.onDatabaseConnected();
-//      viewsPanel.onDatabaseConnected();
-//      aggregatesPanel.onDatabaseConnected();
+      crudPanel.onDatabaseConnected();
+      joinsPanel.onDatabaseConnected();
+      viewsPanel.onDatabaseConnected();
+      //aggregatesPanel.onDatabaseConnected();
 
       JOptionPane.showMessageDialog(this, "Successfully connected to the database",
               "Connection Status", JOptionPane.INFORMATION_MESSAGE);
