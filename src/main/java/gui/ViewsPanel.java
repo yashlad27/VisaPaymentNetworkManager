@@ -7,7 +7,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.SQLException;
 
 public class ViewsPanel extends JPanel {
   private DatabaseManager dbManager;
@@ -22,7 +21,7 @@ public class ViewsPanel extends JPanel {
   private JButton createViewButton;
   private JButton dropViewButton;
 
-  public ViewsPanel() {
+  public ViewsPanel(DatabaseManager databaseManager) {
     this.dbManager = DatabaseManager.getInstance();
     this.viewOperations = new ViewOperations();
 

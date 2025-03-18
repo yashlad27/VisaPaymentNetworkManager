@@ -7,7 +7,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.Map;
 
 public class JoinsPanel extends JPanel {
   private DatabaseManager dbManager;
@@ -21,7 +20,7 @@ public class JoinsPanel extends JPanel {
   private JButton executeCustomJoinButton;
   private JTabbedPane joinTabPane;
 
-  public JoinsPanel() {
+  public JoinsPanel(DatabaseManager databaseManager) {
     this.dbManager = DatabaseManager.getInstance();
     this.joinOperations = new JoinOperations();
 

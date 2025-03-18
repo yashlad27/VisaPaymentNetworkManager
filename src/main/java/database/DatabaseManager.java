@@ -10,7 +10,7 @@ public class DatabaseManager {
   private Connection connection;
   private Statement statement;
 
-  private DatabaseManager() {
+  public DatabaseManager() {
     // Private constructor for singleton pattern
   }
 
@@ -79,5 +79,11 @@ public class DatabaseManager {
       }
       tableModel.addRow(row);
     }
+  }
+  public Connection connect() {
+    String url = "jdbc:mysql://localhost:3306/visa_payment_network";
+    String user = "root";
+    String password = "test123";
+    return connect(url, user, password) ? connection : null;
   }
 }
