@@ -15,7 +15,7 @@ public class DatabaseManager {
   private Connection connection;
 
   // Database connection parameters
-  private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/visa_payment_network";
+  private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/visa_final_spring";
   private static final String DEFAULT_USER = "root";
   private static final String DEFAULT_PASSWORD = "test123";
 
