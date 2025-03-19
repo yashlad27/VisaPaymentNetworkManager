@@ -1,12 +1,13 @@
 package payment.gui;
 
-import payment.database.DatabaseManager;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.Connection;
+
+import javax.swing.*;
+
+import payment.database.DatabaseManager;
 
 /**
  * Main application class for the Visa Payment Network Manager.
