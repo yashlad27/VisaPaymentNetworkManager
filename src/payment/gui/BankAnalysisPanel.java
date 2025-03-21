@@ -1,11 +1,5 @@
 package payment.gui;
 
-import payment.database.DatabaseManager;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.Connection;
@@ -14,6 +8,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.NumberFormat;
 import java.util.Locale;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
+
+import payment.database.DatabaseManager;
 
 /**
  * Panel for analyzing bank performance and transaction data.
@@ -71,9 +74,10 @@ public class BankAnalysisPanel extends JPanel {
     // Create main content panel with tabbed pane for bank types
     bankTypeTabs = new JTabbedPane();
 
-    // Create issuing banks panel
-    JPanel issuingBanksPanel = createIssuingBanksPanel();
-    bankTypeTabs.addTab("Issuing Banks", issuingBanksPanel);
+    // Create issuing banks panel with search functionality
+    JPanel issuingBanksBasePanel = createIssuingBanksPanel();
+    JPanel issuingBanksWithSearch = addSearchToIssuingBanksPanel(issuingBanksBasePanel);
+    bankTypeTabs.addTab("Issuing Banks", issuingBanksWithSearch);
 
     // Create acquiring banks panel
     JPanel acquiringBanksPanel = createAcquiringBanksPanel();
@@ -291,7 +295,7 @@ public class BankAnalysisPanel extends JPanel {
         final double avgAmount = rs.getDouble("avg_transaction_amount");
 
         SwingUtilities.invokeLater(() ->
-                issuingBankModel.addRow(new Object[] {
+                issuingBankModel.addRow(new Object[]{
                         bankName,
                         bankCode,
                         String.format("%,d", count),
@@ -335,7 +339,7 @@ public class BankAnalysisPanel extends JPanel {
         final double avgAmount = rs.getDouble("avg_transaction_amount");
 
         SwingUtilities.invokeLater(() ->
-                acquiringBankModel.addRow(new Object[] {
+                acquiringBankModel.addRow(new Object[]{
                         bankName,
                         bankCode,
                         String.format("%,d", count),
@@ -379,7 +383,7 @@ public class BankAnalysisPanel extends JPanel {
         final double processingTime = rs.getDouble("avg_processing_time_seconds");
 
         SwingUtilities.invokeLater(() ->
-                bankPerformanceModel.addRow(new Object[] {
+                bankPerformanceModel.addRow(new Object[]{
                         bankName,
                         String.format("%,d", count),
                         String.format("%.2f%%", approvalRate),
@@ -387,6 +391,64 @@ public class BankAnalysisPanel extends JPanel {
                 })
         );
       }
+    }
+  }
+
+  /**
+   * Add a search functionality to the issuing banks panel.
+   *
+   * @param panel The issuing banks panel
+   * @return The panel with search functionality
+   */
+  private JPanel addSearchToIssuingBanksPanel(JPanel panel) {
+    JPanel mainPanel = new JPanel(new BorderLayout());
+
+    // Create search panel
+    JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JLabel searchLabel = new JLabel("Search Bank:");
+    JTextField searchField = new JTextField(20);
+
+    searchField.getDocument().addDocumentListener(new DocumentListener() {
+      @Override
+      public void insertUpdate(DocumentEvent e) {
+        filterIssuingBanksTable(searchField.getText());
+      }
+
+      @Override
+      public void removeUpdate(DocumentEvent e) {
+        filterIssuingBanksTable(searchField.getText());
+      }
+
+      @Override
+      public void changedUpdate(DocumentEvent e) {
+        filterIssuingBanksTable(searchField.getText());
+      }
+    });
+
+    searchPanel.add(searchLabel);
+    searchPanel.add(searchField);
+
+    // Add components to main panel
+    mainPanel.add(searchPanel, BorderLayout.NORTH);
+    mainPanel.add(panel, BorderLayout.CENTER);
+
+    return mainPanel;
+  }
+
+  /**
+   * Filter the issuing banks table based on search text.
+   *
+   * @param searchText The search text
+   */
+  private void filterIssuingBanksTable(String searchText) {
+    TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(issuingBankModel);
+    issuingBankTable.setRowSorter(sorter);
+
+    if (searchText.trim().length() == 0) {
+      sorter.setRowFilter(null);
+    } else {
+      // Search in bank name and bank code columns
+      sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText, 0, 1));
     }
   }
 }

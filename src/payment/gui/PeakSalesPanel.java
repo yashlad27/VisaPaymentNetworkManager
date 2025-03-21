@@ -427,16 +427,213 @@ public class PeakSalesPanel extends JPanel {
   }
 
   /**
+   * Custom heatmap component for displaying transaction volume by day and hour
+   */
+  private static class TransactionHeatmap extends JPanel {
+    private Map<String, Map<Integer, Integer>> heatmapData;
+    private final String[] daysOfWeek = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+    private final int maxHour = 23;
+    private final Color lowColor = new Color(220, 237, 255);  // Light blue
+    private final Color highColor = new Color(0, 51, 153);    // Dark blue
+
+    public TransactionHeatmap() {
+      setBackground(Color.WHITE);
+      heatmapData = new HashMap<>();
+      for (String day : daysOfWeek) {
+        heatmapData.put(day, new HashMap<>());
+      }
+    }
+
+    public void setData(Map<String, Map<Integer, Integer>> data, int maxValue) {
+      this.heatmapData = data;
+      this.maxValue = maxValue;
+      repaint();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+      super.paintComponent(g);
+      Graphics2D g2d = (Graphics2D) g;
+      g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+      int width = getWidth();
+      int height = getHeight();
+
+      int cellWidth = width / (maxHour + 2);  // +2 for labels
+      int cellHeight = height / (daysOfWeek.length + 2);  // +2 for labels
+
+      int startX = cellWidth;
+      int startY = cellHeight;
+
+      // Draw hour labels (top)
+      g2d.setFont(new Font("SansSerif", Font.BOLD, 10));
+      for (int hour = 0; hour <= maxHour; hour++) {
+        String hourLabel = hour + "h";
+        g2d.setColor(Color.BLACK);
+        g2d.drawString(hourLabel, startX + hour * cellWidth + cellWidth/2 - 10, startY - 5);
+      }
+
+      // Draw day labels (left)
+      for (int day = 0; day < daysOfWeek.length; day++) {
+        g2d.setColor(Color.BLACK);
+        g2d.drawString(daysOfWeek[day], 5, startY + day * cellHeight + cellHeight/2 + 5);
+      }
+
+      // Draw heatmap cells
+      for (int day = 0; day < daysOfWeek.length; day++) {
+        String dayName = daysOfWeek[day];
+        Map<Integer, Integer> hourData = heatmapData.get(dayName);
+
+        for (int hour = 0; hour <= maxHour; hour++) {
+          int value = hourData.getOrDefault(hour, 0);
+
+          // Calculate color based on value
+          float ratio = maxValue > 0 ? (float) value / maxValue : 0;
+          Color cellColor = interpolateColor(lowColor, highColor, ratio);
+
+          g2d.setColor(cellColor);
+          g2d.fillRect(startX + hour * cellWidth, startY + day * cellHeight, cellWidth, cellHeight);
+
+          // Draw cell border
+          g2d.setColor(Color.GRAY);
+          g2d.drawRect(startX + hour * cellWidth, startY + day * cellHeight, cellWidth, cellHeight);
+
+          // Draw value if cell is large enough
+          if (cellWidth > 20 && cellHeight > 20) {
+            g2d.setColor(ratio > 0.5 ? Color.WHITE : Color.BLACK);
+            g2d.drawString(String.valueOf(value),
+                    startX + hour * cellWidth + cellWidth/2 - 5,
+                    startY + day * cellHeight + cellHeight/2 + 5);
+          }
+        }
+      }
+
+      // Draw legend
+      drawLegend(g2d, width - 150, height - 50);
+    }
+
+    private void drawLegend(Graphics2D g2d, int x, int y) {
+      int legendWidth = 120;
+      int legendHeight = 20;
+
+      // Draw legend title
+      g2d.setColor(Color.BLACK);
+      g2d.drawString("Transaction Volume", x, y - 5);
+
+      // Draw gradient
+      for (int i = 0; i < legendWidth; i++) {
+        float ratio = (float) i / legendWidth;
+        g2d.setColor(interpolateColor(lowColor, highColor, ratio));
+        g2d.drawLine(x + i, y, x + i, y + legendHeight);
+      }
+
+      // Draw border
+      g2d.setColor(Color.GRAY);
+      g2d.drawRect(x, y, legendWidth, legendHeight);
+
+      // Draw labels
+      g2d.setColor(Color.BLACK);
+      g2d.drawString("Low", x - 5, y + legendHeight + 15);
+      g2d.drawString("High", x + legendWidth - 10, y + legendHeight + 15);
+    }
+
+    private Color interpolateColor(Color c1, Color c2, float ratio) {
+      int red = (int) (c1.getRed() + ratio * (c2.getRed() - c1.getRed()));
+      int green = (int) (c1.getGreen() + ratio * (c2.getGreen() - c1.getGreen()));
+      int blue = (int) (c1.getBlue() + ratio * (c2.getBlue() - c1.getBlue()));
+      return new Color(red, green, blue);
+    }
+
+    private int maxValue = 100;
+  }
+
+  /**
+   * Update the heatmap visualization
+   */
+  private void updateHeatmap() {
+    try {
+      boolean viewByCount = viewByComboBox.getSelectedIndex() == 0;
+      String timeframe = getTimeframeWhereClause();
+
+      String query = "SELECT " +
+              "    DAYNAME(timestamp) as day_of_week, " +
+              "    HOUR(timestamp) as hour_of_day, " +
+              "    COUNT(*) as transaction_count, " +
+              "    SUM(amount) as total_amount " +
+              "FROM Transaction " +
+              timeframe +
+              "GROUP BY DAYNAME(timestamp), HOUR(timestamp) ";
+
+      Map<String, Map<Integer, Integer>> heatmapData = new HashMap<>();
+      String[] daysOfWeek = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+
+      // Initialize the data structure
+      for (String day : daysOfWeek) {
+        Map<Integer, Integer> dayMap = new HashMap<>();
+        for (int i = 0; i < 24; i++) {
+          dayMap.put(i, 0);
+        }
+        heatmapData.put(day, dayMap);
+      }
+
+      // Get max value for scaling
+      int maxValue = 0;
+
+      try (Statement stmt = connection.createStatement();
+           ResultSet rs = stmt.executeQuery(query)) {
+
+        while (rs.next()) {
+          String day = rs.getString("day_of_week");
+          int hour = rs.getInt("hour_of_day");
+          int value = viewByCount ?
+                  rs.getInt("transaction_count") :
+                  (int)rs.getDouble("total_amount");
+
+          if (heatmapData.containsKey(day)) {
+            heatmapData.get(day).put(hour, value);
+            maxValue = Math.max(maxValue, value);
+          }
+        }
+      }
+
+      // Create heatmap component if it doesn't exist
+      if (!(heatmapPanel.getComponent(0) instanceof TransactionHeatmap)) {
+        heatmapPanel.removeAll();
+        TransactionHeatmap heatmap = new TransactionHeatmap();
+        heatmapPanel.add(heatmap, BorderLayout.CENTER);
+      }
+
+      // Update heatmap component with new data
+      final int finalMaxValue = maxValue;
+      SwingUtilities.invokeLater(() -> {
+        TransactionHeatmap heatmap = (TransactionHeatmap)heatmapPanel.getComponent(0);
+        heatmap.setData(heatmapData, finalMaxValue);
+        heatmapPanel.revalidate();
+        heatmapPanel.repaint();
+      });
+
+    } catch (SQLException ex) {
+      ex.printStackTrace();
+      JOptionPane.showMessageDialog(
+              this,
+              "Error creating heatmap: " + ex.getMessage(),
+              "Visualization Error",
+              JOptionPane.ERROR_MESSAGE
+      );
+    }
+  }
+
+  /**
    * Update the heatmap panel.
    * Note: This is a placeholder for actual heatmap implementation.
    */
-  private void updateHeatmap() {
-    // This would be implemented with a custom visualization
-    // For a real implementation, consider using JFreeChart or a custom component
-    JLabel placeholderLabel = new JLabel("Heatmap implementation would go here");
-    heatmapPanel.removeAll();
-    heatmapPanel.add(placeholderLabel, BorderLayout.CENTER);
-    heatmapPanel.revalidate();
-    heatmapPanel.repaint();
-  }
+//  private void updateHeatmap() {
+//    // This would be implemented with a custom visualization
+//    // For a real implementation, consider using JFreeChart or a custom component
+//    JLabel placeholderLabel = new JLabel("Heatmap implementation would go here");
+//    heatmapPanel.removeAll();
+//    heatmapPanel.add(placeholderLabel, BorderLayout.CENTER);
+//    heatmapPanel.revalidate();
+//    heatmapPanel.repaint();
+//  }
 }
