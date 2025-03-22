@@ -36,6 +36,10 @@ public class DashboardPanel extends JPanel {
   private JTable cardTypeTable;
   private DefaultTableModel cardTypeTableModel;
 
+  // UI Components for visualizations
+  private TransactionStatusPanel transactionStatusPanel;
+  private HourlyVolumePanel hourlyVolumePanel;
+
   // Formatters
   private final DecimalFormat percentFormat = new DecimalFormat("#0.00%");
   private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
@@ -223,7 +227,7 @@ public class DashboardPanel extends JPanel {
     cardTypeTable = new JTable(cardTypeTableModel);
     cardTypePanel.add(new JScrollPane(cardTypeTable), BorderLayout.CENTER);
 
-    // Transaction status panel
+    // Transaction status panel - Using the new TransactionStatusPanel
     JPanel statusPanel = new JPanel(new BorderLayout());
     statusPanel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createEtchedBorder(),
@@ -231,9 +235,12 @@ public class DashboardPanel extends JPanel {
             TitledBorder.LEFT,
             TitledBorder.TOP
     ));
-    statusPanel.add(new JLabel("Transaction status breakdown will be displayed here", SwingConstants.CENTER));
 
-    // Hourly volume panel
+    // Create and add the new TransactionStatusPanel
+    transactionStatusPanel = new TransactionStatusPanel(dbManager);
+    statusPanel.add(transactionStatusPanel, BorderLayout.CENTER);
+
+    // Hourly volume panel - Using the new HourlyVolumePanel
     JPanel hourlyPanel = new JPanel(new BorderLayout());
     hourlyPanel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createEtchedBorder(),
@@ -241,7 +248,10 @@ public class DashboardPanel extends JPanel {
             TitledBorder.LEFT,
             TitledBorder.TOP
     ));
-    hourlyPanel.add(new JLabel("Hourly transaction volume will be displayed here", SwingConstants.CENTER));
+
+    // Create and add the new HourlyVolumePanel
+    hourlyVolumePanel = new HourlyVolumePanel(dbManager, true);
+    hourlyPanel.add(hourlyVolumePanel, BorderLayout.CENTER);
 
     // Top merchants panel
     JPanel merchantsPanel = new JPanel(new BorderLayout());
@@ -295,6 +305,11 @@ public class DashboardPanel extends JPanel {
           updateKPIs();
           updateCardTypeDistribution();
           updateTopMerchants();
+
+          // Refresh the transaction status and hourly volume panels
+          transactionStatusPanel.refreshData();
+          hourlyVolumePanel.refreshData();
+
         } catch (SQLException ex) {
           ex.printStackTrace();
           JOptionPane.showMessageDialog(
