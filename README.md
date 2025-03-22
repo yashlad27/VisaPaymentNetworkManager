@@ -23,7 +23,14 @@ Key features include:
 
 ## Screenshots
 
-*[You can add screenshots of your application here]*
+<img width="1312" alt="Screenshot 2025-03-21 at 8 07 37 PM" src="https://github.com/user-attachments/assets/eb8b747a-462e-45c7-b29c-aa70b07b1ea1" />
+<img width="1312" alt="Screenshot 2025-03-21 at 8 07 49 PM" src="https://github.com/user-attachments/assets/17e73f6b-4d73-47e5-bb5b-2e7a24e0d63e" />
+<img width="1312" alt="Screenshot 2025-03-21 at 8 08 04 PM" src="https://github.com/user-attachments/assets/aa1a351a-8dad-4029-a06c-5d86bbcaa0d4" />
+<img width="1312" alt="Screenshot 2025-03-21 at 8 08 12 PM" src="https://github.com/user-attachments/assets/7aa5d6a4-a37b-441e-ac03-1ad154ea20cc" />
+<img width="1312" alt="Screenshot 2025-03-21 at 8 08 25 PM" src="https://github.com/user-attachments/assets/74624b7a-9085-42c1-89bf-502b03dcfbe4" />
+<img width="1312" alt="Screenshot 2025-03-21 at 8 08 42 PM" src="https://github.com/user-attachments/assets/d7decc53-b45b-4856-bfac-463a6b588f14" />
+
+
 
 ## Prerequisites
 
