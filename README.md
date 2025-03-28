@@ -51,6 +51,93 @@ Key features include:
    mysql -u username -p visa_final_spring < src/res/db/insert_table.sql
    ```
 
+## Database Features Setup
+
+After setting up the basic database, you can enable additional features by executing the following SQL scripts:
+
+1. Create audit and reporting tables:
+   ```
+   mysql -u username -p visa_final_spring < src/res/db/tables/audit_tables.sql
+   ```
+
+2. Set up transaction triggers:
+   ```
+   mysql -u username -p visa_final_spring < src/res/db/triggers/transaction_triggers.sql
+   ```
+
+3. Configure maintenance events:
+   ```
+   mysql -u username -p visa_final_spring < src/res/db/events/maintenance_events.sql
+   ```
+
+4. Create analytics functions:
+   ```
+   mysql -u username -p visa_final_spring < src/res/db/functions/analytics_functions.sql
+   ```
+
+### Available Analytics Queries
+
+The following pre-defined analytics queries are available in `src/res/db/queries/analytics_queries.sql`:
+
+1. Top Performing Banks Analysis:
+   ```sql
+   SELECT * FROM BankPerformanceReport 
+   WHERE report_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+   ORDER BY success_rate DESC;
+   ```
+
+2. Transaction Volume by Card Type:
+   ```sql
+   SELECT * FROM Transaction 
+   WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+   ORDER BY timestamp DESC;
+   ```
+
+3. Merchant Performance Metrics:
+   ```sql
+   SELECT * FROM PaymentMerchant 
+   WHERE merchant_id IN (
+       SELECT merchant_id 
+       FROM Transaction 
+       WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+   );
+   ```
+
+### Using Analytics Functions
+
+You can use the following functions in your queries:
+
+1. Calculate Success Rate:
+   ```sql
+   SELECT calculate_success_rate(bank_id, start_date, end_date) 
+   FROM AcquiringBank;
+   ```
+
+2. Get Daily Transaction Volume:
+   ```sql
+   SELECT get_daily_transaction_volume(CURDATE()) as today_volume;
+   ```
+
+### Monitoring Events
+
+The following automated events are configured:
+
+1. Daily Transaction Cleanup:
+   - Archives transactions older than 90 days
+   - Runs automatically every day
+
+2. Weekly Bank Performance Report:
+   - Generates performance metrics for all banks
+   - Runs automatically every week
+
+### Viewing Audit Logs
+
+To view transaction status changes:
+```sql
+SELECT * FROM TransactionAuditLog 
+ORDER BY change_timestamp DESC;
+```
+
 ## Build & Run
 
 ### From Source

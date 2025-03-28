@@ -1,4 +1,4 @@
-package payment.gui;
+package main.java.payment.gui;
 
 import java.awt.*;
 import java.sql.Connection;
@@ -11,13 +11,12 @@ import java.util.Locale;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-import payment.database.DatabaseManager;
+import main.java.payment.database.DatabaseManager;
 
 /**
  * Panel for displaying hourly transaction volume in a line chart.
  */
 public class HourlyVolumePanel extends JPanel {
-  private final DatabaseManager dbManager;
   private final Connection connection;
   private boolean viewByCount;
 
@@ -41,7 +40,6 @@ public class HourlyVolumePanel extends JPanel {
    * @param viewByCount Whether to view by count (true) or amount (false)
    */
   public HourlyVolumePanel(DatabaseManager dbManager, boolean viewByCount) {
-    this.dbManager = dbManager;
     this.connection = dbManager.getConnection();
     this.viewByCount = viewByCount;
 

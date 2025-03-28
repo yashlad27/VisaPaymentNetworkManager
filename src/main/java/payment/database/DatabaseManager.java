@@ -1,4 +1,4 @@
-package payment.database;
+package main.java.payment.database;
 
 import javax.swing.*;
 import java.sql.*;
@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 public class DatabaseManager {
   private static final Logger LOGGER = Logger.getLogger(DatabaseManager.class.getName());
   private static DatabaseManager instance;
-  private Connection connection;
+  private static Connection connection;
 
   // Database connection parameters
   private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/visa_final_spring";
@@ -22,7 +22,7 @@ public class DatabaseManager {
   /**
    * Private constructor to prevent instantiation outside of this class.
    */
-  private DatabaseManager() {
+  DatabaseManager() {
     // Private constructor for singleton pattern
   }
 
@@ -84,7 +84,7 @@ public class DatabaseManager {
    *
    * @return The current connection or null if not connected
    */
-  public Connection getConnection() {
+  public static Connection getConnection() {
     return connection;
   }
 

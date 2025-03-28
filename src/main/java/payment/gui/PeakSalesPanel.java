@@ -1,12 +1,5 @@
-package payment.gui;
+package main.java.payment.gui;
 
-import payment.database.DatabaseManager;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.Connection;
@@ -14,9 +7,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.NumberFormat;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+
+import main.java.payment.database.DatabaseManager;
 
 /**
  * Panel for analyzing peak sales times and transaction patterns.
@@ -324,7 +323,7 @@ public class PeakSalesPanel extends JPanel {
                 rs.getDouble("percent_by_value");
 
         SwingUtilities.invokeLater(() ->
-                hourlyVolumeModel.addRow(new Object[] {
+                hourlyVolumeModel.addRow(new Object[]{
                         hour,
                         String.format("%,d", count),
                         currencyFormat.format(amount),
@@ -374,7 +373,7 @@ public class PeakSalesPanel extends JPanel {
                 rs.getDouble("percent_by_value");
 
         SwingUtilities.invokeLater(() ->
-                weekdayVolumeModel.addRow(new Object[] {
+                weekdayVolumeModel.addRow(new Object[]{
                         day,
                         String.format("%,d", count),
                         currencyFormat.format(amount),

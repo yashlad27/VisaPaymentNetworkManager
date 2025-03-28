@@ -1,11 +1,5 @@
-package payment.gui;
+package main.java.payment.gui;
 
-import payment.database.DatabaseManager;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.Connection;
@@ -15,6 +9,13 @@ import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+
+import main.java.payment.database.DatabaseManager;
 
 /**
  * Main dashboard panel showing key performance indicators and summary charts.
@@ -37,8 +38,8 @@ public class DashboardPanel extends JPanel {
   private DefaultTableModel cardTypeTableModel;
 
   // UI Components for visualizations
-  private TransactionStatusPanel transactionStatusPanel;
-  private HourlyVolumePanel hourlyVolumePanel;
+  private payment.gui.TransactionStatusPanel transactionStatusPanel;
+  private payment.gui.HourlyVolumePanel hourlyVolumePanel;
 
   // Formatters
   private final DecimalFormat percentFormat = new DecimalFormat("#0.00%");
@@ -167,8 +168,8 @@ public class DashboardPanel extends JPanel {
   /**
    * Create a KPI card with title, subtitle, and value.
    *
-   * @param title The card title
-   * @param subtitle The card subtitle
+   * @param title      The card title
+   * @param subtitle   The card subtitle
    * @param valueLabel The label to display the value
    * @return The card panel
    */
@@ -433,7 +434,7 @@ public class DashboardPanel extends JPanel {
         double percent = rs.getDouble("percent_of_total");
 
         SwingUtilities.invokeLater(() ->
-                cardTypeTableModel.addRow(new Object[] {
+                cardTypeTableModel.addRow(new Object[]{
                         cardType,
                         count,
                         currencyFormat.format(amount),
@@ -474,7 +475,7 @@ public class DashboardPanel extends JPanel {
         double amount = rs.getDouble("total_amount");
 
         SwingUtilities.invokeLater(() ->
-                merchantsTableModel.addRow(new Object[] {
+                merchantsTableModel.addRow(new Object[]{
                         name,
                         category,
                         count,
