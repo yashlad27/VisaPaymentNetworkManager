@@ -1,4 +1,4 @@
-package main.java.payment.database;
+package payment.database;
 
 import javax.swing.*;
 import java.sql.*;

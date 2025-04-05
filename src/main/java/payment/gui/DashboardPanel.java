@@ -1,4 +1,4 @@
-package main.java.payment.gui;
+package payment.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -15,7 +15,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
-import main.java.payment.database.DatabaseManager;
+import payment.database.DatabaseManager;
 
 /**
  * Main dashboard panel showing key performance indicators and summary charts.
@@ -238,7 +238,7 @@ public class DashboardPanel extends JPanel {
     ));
 
     // Create and add the new TransactionStatusPanel
-    transactionStatusPanel = new TransactionStatusPanel(dbManager);
+    transactionStatusPanel = new payment.gui.TransactionStatusPanel(dbManager);
     statusPanel.add(transactionStatusPanel, BorderLayout.CENTER);
 
     // Hourly volume panel - Using the new HourlyVolumePanel

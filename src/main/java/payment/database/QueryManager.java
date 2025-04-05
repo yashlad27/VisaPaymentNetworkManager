@@ -1,4 +1,4 @@
-package main.java.payment.database;
+package payment.database;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

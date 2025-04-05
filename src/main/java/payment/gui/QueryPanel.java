@@ -1,6 +1,6 @@
-package main.java.payment.gui;
+package payment.gui;
 
-import main.java.payment.database.DatabaseManager;
+import payment.database.DatabaseManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

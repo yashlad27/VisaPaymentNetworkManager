@@ -1,4 +1,4 @@
-package main.java.payment.gui;
+package payment.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -15,7 +15,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
-import main.java.payment.database.DatabaseManager;
+import payment.database.DatabaseManager;
 
 /**
  * Panel for analyzing peak sales times and transaction patterns.

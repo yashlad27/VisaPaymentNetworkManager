@@ -1,4 +1,4 @@
-package main.java.payment.gui;
+package payment.gui;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -7,7 +7,7 @@ import java.sql.Connection;
 
 import javax.swing.*;
 
-import main.java.payment.database.DatabaseManager;
+import payment.database.DatabaseManager;
 
 /**
  * Main application class for the Visa Payment Network Manager.
@@ -19,7 +19,6 @@ public class VisaPaymentNetworkManager extends JFrame {
   private static final int DEFAULT_HEIGHT = 800;
 
   private final DatabaseManager dbManager;
-  private JTabbedPane tabbedPane;
 
   /**
    * Constructor for the Visa Payment Network Manager.
@@ -60,7 +59,7 @@ public class VisaPaymentNetworkManager extends JFrame {
     setLocationRelativeTo(null);
 
     // Create tabbed pane for different views
-    tabbedPane = new JTabbedPane();
+    JTabbedPane tabbedPane = new JTabbedPane();
 
     // Create and add dashboard panels
     tabbedPane.addTab("Dashboard Overview", new DashboardPanel(dbManager));

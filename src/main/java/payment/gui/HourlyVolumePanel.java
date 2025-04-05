@@ -1,4 +1,4 @@
-package main.java.payment.gui;
+package payment.gui;
 
 import java.awt.*;
 import java.sql.Connection;
@@ -11,7 +11,7 @@ import java.util.Locale;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-import main.java.payment.database.DatabaseManager;
+import payment.database.DatabaseManager;
 
 /**
  * Panel for displaying hourly transaction volume in a line chart.
@@ -275,12 +275,9 @@ public class HourlyVolumePanel extends JPanel {
   /**
    * Format an hour for display on the x-axis.
    *
-   * @ * Format an hour for display on the x-axis.
-   * *
-   * * @param hour The hour (0-23)
-   * * @return The formatted hour string
+   * @param hour The hour (0-23)
+   * @return The formatted hour string
    */
-
   private String formatHour(int hour) {
     if (hour == 0) {
       return "12am";
@@ -292,5 +289,4 @@ public class HourlyVolumePanel extends JPanel {
       return (hour - 12) + "pm";
     }
   }
-
 }

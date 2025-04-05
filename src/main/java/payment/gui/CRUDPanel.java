@@ -1,4 +1,4 @@
-package main.java.payment.gui;
+package payment.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -21,7 +21,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
-import main.java.payment.database.DatabaseManager;
+import payment.database.DatabaseManager;
 
 /**
  * Panel for performing CRUD (Create, Read, Update, Delete) operations on the database.
@@ -68,6 +68,7 @@ public class CRUDPanel extends JPanel {
     columnNames = new ArrayList<>();
     formFields = new HashMap<>();
     columnTypes = new HashMap<>();
+    currentTable = null; // Explicitly initialize to null
 
     // Create UI Components
     initComponents();
@@ -186,14 +187,54 @@ public class CRUDPanel extends JPanel {
    */
   private void populateTableComboBox() {
     try {
-      DatabaseMetaData metaData = connection.getMetaData();
-      ResultSet tables = metaData.getTables(null, null, "%", new String[]{"TABLE"});
-
-      while (tables.next()) {
-        String tableName = tables.getString("TABLE_NAME");
-        // Skip system tables
-        if (!tableName.startsWith("sys_") && !tableName.startsWith("information_schema")) {
+      tableComboBox.removeAllItems(); // Clear existing items
+      
+      // Get tables from the database schema that actually exist
+      List<String> existingTables = new ArrayList<>();
+      
+      try {
+        // Get table names from visa_final_spring schema
+        String query = "SELECT table_name FROM information_schema.tables " +
+                      "WHERE table_schema = 'visa_final_spring' AND table_type = 'BASE TABLE'";
+        
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+          while (rs.next()) {
+            String tableName = rs.getString("table_name");
+            if (!tableName.startsWith("sys_")) {
+              existingTables.add(tableName);
+            }
+          }
+        }
+      } catch (SQLException e) {
+        // Fallback to metadata approach if the information_schema query fails
+        DatabaseMetaData metaData = connection.getMetaData();
+        ResultSet tables = metaData.getTables(null, null, "%", new String[]{"TABLE"});
+        
+        while (tables.next()) {
+          String tableName = tables.getString("TABLE_NAME");
+          // Skip system tables
+          if (!tableName.startsWith("sys_") && !tableName.startsWith("information_schema")) {
+            existingTables.add(tableName);
+          }
+        }
+      }
+      
+      // Add confirmed tables to the combo box
+      boolean hasValidTables = false;
+      for (String tableName : existingTables) {
+        try {
+          // Verify table structure can be accessed
+          PreparedStatement pstmt = connection.prepareStatement(
+                  "SELECT * FROM " + tableName + " LIMIT 0");
+          pstmt.executeQuery();
+          pstmt.close();
+          
           tableComboBox.addItem(tableName);
+          hasValidTables = true;
+        } catch (SQLException e) {
+          // Skip tables that can't be queried
+          System.err.println("Skipping inaccessible table: " + tableName + " - " + e.getMessage());
         }
       }
 
@@ -202,6 +243,22 @@ public class CRUDPanel extends JPanel {
         currentTable = tableComboBox.getItemAt(0);
         loadTableStructure();
         loadTableData();
+      } else if (!hasValidTables) {
+        JOptionPane.showMessageDialog(
+            this,
+            "No tables found in database. CRUD operations will be disabled.",
+            "Database Warning",
+            JOptionPane.WARNING_MESSAGE
+        );
+        
+        // Disable all buttons since there are no tables
+        createButton.setEnabled(false);
+        updateButton.setEnabled(false);
+        deleteButton.setEnabled(false);
+        refreshButton.setEnabled(false);
+        
+        // Add placeholder message
+        statusLabel.setText("No database tables available for CRUD operations.");
       }
 
     } catch (SQLException e) {
@@ -219,7 +276,19 @@ public class CRUDPanel extends JPanel {
    * Load the structure of the selected table and create input fields.
    */
   private void loadTableStructure() {
+    if (currentTable == null || currentTable.isEmpty()) {
+      return; // No table selected
+    }
+    
     try {
+      // Check if table exists first
+      DatabaseMetaData dbMetaData = connection.getMetaData();
+      ResultSet tables = dbMetaData.getTables(null, null, currentTable, null);
+      if (!tables.next()) {
+        statusLabel.setText("Table " + currentTable + " does not exist.");
+        return;
+      }
+
       // Clear previous form fields
       formPanel.removeAll();
       formFields.clear();
@@ -234,9 +303,6 @@ public class CRUDPanel extends JPanel {
               TitledBorder.LEFT,
               TitledBorder.TOP
       ));
-
-      // Get table metadata
-      DatabaseMetaData dbMetaData = connection.getMetaData();
 
       // Find primary key
       ResultSet primaryKeys = dbMetaData.getPrimaryKeys(null, null, currentTable);
@@ -325,7 +391,40 @@ public class CRUDPanel extends JPanel {
    * Load data from the selected table.
    */
   private void loadTableData() {
+    if (currentTable == null || currentTable.isEmpty()) {
+      return; // No table selected
+    }
+    
     try {
+      // Verify the table exists first
+      DatabaseMetaData dbMetaData = connection.getMetaData();
+      ResultSet tables = dbMetaData.getTables(null, null, currentTable, null);
+      if (!tables.next()) {
+        // Create empty table model
+        tableModel = new DefaultTableModel();
+        dataTable.setModel(tableModel);
+        statusLabel.setText("Table " + currentTable + " does not exist.");
+        return;
+      }
+      
+      // Check if table is accessible by trying to get metadata first
+      try {
+        ResultSet columns = dbMetaData.getColumns(null, null, currentTable, null);
+        if (!columns.next()) {
+          // Table exists but has no columns or is not accessible
+          tableModel = new DefaultTableModel();
+          dataTable.setModel(tableModel);
+          statusLabel.setText("Table " + currentTable + " has no columns or is not accessible.");
+          return;
+        }
+      } catch (SQLException e) {
+        // Handle error accessing table metadata
+        tableModel = new DefaultTableModel();
+        dataTable.setModel(tableModel);
+        statusLabel.setText("Error accessing " + currentTable + ": " + e.getMessage());
+        return;
+      }
+      
       String query = "SELECT * FROM " + currentTable;
 
       try (Statement stmt = connection.createStatement();
@@ -363,15 +462,19 @@ public class CRUDPanel extends JPanel {
 
         // Update status
         statusLabel.setText("Loaded " + tableModel.getRowCount() + " records from " + currentTable);
+      } catch (SQLException e) {
+        // Handle SQL error when executing query
+        tableModel = new DefaultTableModel();
+        dataTable.setModel(tableModel);
+        statusLabel.setText("Error querying " + currentTable + ": " + e.getMessage());
+        System.err.println("Error querying table " + currentTable + ": " + e.getMessage());
       }
     } catch (SQLException e) {
       e.printStackTrace();
-      JOptionPane.showMessageDialog(
-              this,
-              "Error loading table data: " + e.getMessage(),
-              "Database Error",
-              JOptionPane.ERROR_MESSAGE
-      );
+      // Create an empty table model to avoid UI issues
+      tableModel = new DefaultTableModel();
+      dataTable.setModel(tableModel);
+      statusLabel.setText("Error loading table: " + e.getMessage());
     }
   }
 

@@ -1,6 +1,7 @@
-package main.java.payment.gui;
+package payment.gui;
 
 import java.awt.*;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,8 +16,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
-import main.java.payment.database.DatabaseManager;
-import main.java.payment.database.QueryManager;
+import payment.database.DatabaseManager;
+import payment.database.QueryManager;
 
 /**
  * Panel for analyzing bank performance and transaction data.
@@ -62,11 +63,11 @@ public class BankAnalysisPanel extends JPanel {
     setLayout(new BorderLayout());
     setBorder(new EmptyBorder(10, 10, 10, 10));
 
+    // Initialize table models first
+    initTableModels();
+    
     // Initialize UI components
     initComponents();
-
-    // Initialize table models
-    initTableModels();
 
     // Load initial data
     refreshData();
@@ -215,11 +216,32 @@ public class BankAnalysisPanel extends JPanel {
       model.setRowCount(0);
 
       for (Map<String, Object> row : data) {
+        // Safely convert BigDecimal to double without direct casting
+        Object successRateObj = row.get("success_rate");
+        double successRate = 0.0;
+        if (successRateObj instanceof BigDecimal) {
+          successRate = ((BigDecimal) successRateObj).doubleValue();
+        } else if (successRateObj instanceof Double) {
+          successRate = (Double) successRateObj;
+        } else if (successRateObj != null) {
+          successRate = Double.parseDouble(successRateObj.toString());
+        }
+        
+        Object totalAmountObj = row.get("total_amount");
+        double totalAmount = 0.0;
+        if (totalAmountObj instanceof BigDecimal) {
+          totalAmount = ((BigDecimal) totalAmountObj).doubleValue();
+        } else if (totalAmountObj instanceof Double) {
+          totalAmount = (Double) totalAmountObj;
+        } else if (totalAmountObj != null) {
+          totalAmount = Double.parseDouble(totalAmountObj.toString());
+        }
+
         model.addRow(new Object[]{
                 row.get("bank_name"),
                 row.get("total_transactions"),
-                String.format("%.2f%%", (Double) row.get("success_rate")),
-                String.format("$%.2f", (Double) row.get("total_amount"))
+                String.format("%.2f%%", successRate),
+                String.format("$%.2f", totalAmount)
         });
       }
 

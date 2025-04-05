@@ -1,6 +1,6 @@
-package main.java.payment.gui;
+package payment.gui;
 
-import main.java.payment.database.DatabaseManager;
+import payment.database.DatabaseManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,8 +16,7 @@ import java.util.Locale;
  * Panel for displaying transaction status breakdown in a graphical format.
  */
 public class TransactionStatusPanel extends JPanel {
-    private final DatabaseManager dbManager;
-    private final Connection connection;
+  private final Connection connection;
 
     // Status categories
     private static final String[] STATUS_TYPES = {"Approved", "Declined", "Pending"};
@@ -50,8 +49,7 @@ public class TransactionStatusPanel extends JPanel {
      * @param dbManager The database manager
      */
     public TransactionStatusPanel(DatabaseManager dbManager) {
-        this.dbManager = dbManager;
-        this.connection = dbManager.getConnection();
+      this.connection = dbManager.getConnection();
 
         // Initialize data arrays
         statusCounts = new int[STATUS_TYPES.length];

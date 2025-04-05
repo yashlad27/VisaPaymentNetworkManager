@@ -1,4 +1,4 @@
-package main.java.payment.gui;
+package payment.gui;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -8,6 +8,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 
 import java.awt.*;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,7 +21,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
-import main.java.payment.database.DatabaseManager;
+import payment.database.DatabaseManager;
 
 /**
  * Panel for analyzing card usage patterns.
@@ -67,11 +68,11 @@ public class CardUsagePanel extends JPanel {
     setLayout(new BorderLayout());
     setBorder(new EmptyBorder(10, 10, 10, 10));
 
+    // Initialize table models first
+    initTableModels();
+    
     // Initialize UI components
     initComponents();
-
-    // Initialize table models
-    initTableModels();
 
     // Load initial data
     refreshData();
@@ -255,13 +256,34 @@ public class CardUsagePanel extends JPanel {
 
       cardDistributionModel.setRowCount(0);
       while (rs.next()) {
+        // Safely handle BigDecimal conversion
+        Object totalAmountObj = rs.getObject("total_amount");
+        double totalAmount = 0.0;
+        if (totalAmountObj instanceof BigDecimal) {
+          totalAmount = ((BigDecimal) totalAmountObj).doubleValue();
+        } else if (totalAmountObj instanceof Double) {
+          totalAmount = (Double) totalAmountObj;
+        } else if (totalAmountObj != null) {
+          totalAmount = Double.parseDouble(totalAmountObj.toString());
+        }
+        
+        Object successRateObj = rs.getObject("success_rate");
+        double successRate = 0.0;
+        if (successRateObj instanceof BigDecimal) {
+          successRate = ((BigDecimal) successRateObj).doubleValue();
+        } else if (successRateObj instanceof Double) {
+          successRate = (Double) successRateObj;
+        } else if (successRateObj != null) {
+          successRate = Double.parseDouble(successRateObj.toString());
+        }
+        
         cardDistributionModel.addRow(new Object[]{
                 rs.getString("card_type"),
                 rs.getInt("total_cards"),
                 rs.getInt("active_cards"),
                 rs.getInt("total_transactions"),
-                currencyFormat.format(rs.getDouble("total_amount")),
-                String.format("%.2f%%", rs.getDouble("success_rate"))
+                currencyFormat.format(totalAmount),
+                String.format("%.2f%%", successRate)
         });
       }
 
@@ -299,9 +321,41 @@ public class CardUsagePanel extends JPanel {
         totalCardsLabel.setText("Total Cards: " + rs.getInt("total_cards"));
         activeCardsLabel.setText("Active Cards: " + rs.getInt("active_cards"));
         totalTransactionsLabel.setText("Total Transactions: " + rs.getInt("total_transactions"));
-        totalAmountLabel.setText("Total Amount: " + currencyFormat.format(rs.getDouble("total_amount")));
-        avgTransactionLabel.setText("Average Transaction: " + currencyFormat.format(rs.getDouble("avg_amount")));
-        successRateLabel.setText("Success Rate: " + String.format("%.2f%%", rs.getDouble("success_rate")));
+        
+        // Safely handle BigDecimal conversion
+        Object totalAmountObj = rs.getObject("total_amount");
+        double totalAmount = 0.0;
+        if (totalAmountObj instanceof BigDecimal) {
+          totalAmount = ((BigDecimal) totalAmountObj).doubleValue();
+        } else if (totalAmountObj instanceof Double) {
+          totalAmount = (Double) totalAmountObj;
+        } else if (totalAmountObj != null) {
+          totalAmount = Double.parseDouble(totalAmountObj.toString());
+        }
+        
+        Object avgAmountObj = rs.getObject("avg_amount");
+        double avgAmount = 0.0;
+        if (avgAmountObj instanceof BigDecimal) {
+          avgAmount = ((BigDecimal) avgAmountObj).doubleValue();
+        } else if (avgAmountObj instanceof Double) {
+          avgAmount = (Double) avgAmountObj;
+        } else if (avgAmountObj != null) {
+          avgAmount = Double.parseDouble(avgAmountObj.toString());
+        }
+        
+        Object successRateObj = rs.getObject("success_rate");
+        double successRate = 0.0;
+        if (successRateObj instanceof BigDecimal) {
+          successRate = ((BigDecimal) successRateObj).doubleValue();
+        } else if (successRateObj instanceof Double) {
+          successRate = (Double) successRateObj;
+        } else if (successRateObj != null) {
+          successRate = Double.parseDouble(successRateObj.toString());
+        }
+        
+        totalAmountLabel.setText("Total Amount: " + currencyFormat.format(totalAmount));
+        avgTransactionLabel.setText("Average Transaction: " + currencyFormat.format(avgAmount));
+        successRateLabel.setText("Success Rate: " + String.format("%.2f%%", successRate));
       }
 
     } catch (SQLException e) {
@@ -345,10 +399,21 @@ public class CardUsagePanel extends JPanel {
       cardTransactionModel.setRowCount(0);
 
       while (rs.next()) {
+        // Safely handle BigDecimal conversion for amount
+        Object amountObj = rs.getObject("amount");
+        double amount = 0.0;
+        if (amountObj instanceof BigDecimal) {
+          amount = ((BigDecimal) amountObj).doubleValue();
+        } else if (amountObj instanceof Double) {
+          amount = (Double) amountObj;
+        } else if (amountObj != null) {
+          amount = Double.parseDouble(amountObj.toString());
+        }
+        
         cardTransactionModel.addRow(new Object[]{
                 rs.getTimestamp("timestamp"),
                 rs.getString("cardholder"),
-                currencyFormat.format(rs.getDouble("amount")),
+                currencyFormat.format(amount),
                 rs.getString("status"),
                 rs.getString("merchant_name"),
                 rs.getString("auth_code"),
@@ -422,8 +487,19 @@ public class CardUsagePanel extends JPanel {
               "GROUP BY card_type";
       rs = stmt.executeQuery(query);
       while (rs.next()) {
+        // Safely handle BigDecimal conversion
+        Object rateObj = rs.getObject("success_rate");
+        double rate = 0.0;
+        if (rateObj instanceof BigDecimal) {
+          rate = ((BigDecimal) rateObj).doubleValue();
+        } else if (rateObj instanceof Double) {
+          rate = (Double) rateObj;
+        } else if (rateObj != null) {
+          rate = Double.parseDouble(rateObj.toString());
+        }
+        
         successDataset.addValue(
-                rs.getDouble("success_rate"),
+                rate,
                 "Success Rate",
                 rs.getString("card_type")
         );
