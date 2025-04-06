@@ -1,239 +1,168 @@
 # Visa Payment Network Manager
 
-A Java Swing desktop application for managing and analyzing credit card payment transaction data across the Visa payment network. This application provides real-time visualization and analytics for transaction patterns, bank performance, and card usage.
+A comprehensive Java Swing application for managing and analyzing credit card payment transactions within the Visa payment network.
 
 ## Project Overview
 
-The Visa Payment Network Manager is a comprehensive solution for payment processors, financial institutions, and network administrators who need to monitor, analyze, and manage payment transaction data. The application connects to a MySQL database to provide real-time visualization of transaction flows, payment patterns, and performance metrics.
-
-Key features include:
-- Interactive dashboards with transaction metrics
-- Card usage analysis with visualization
-- Bank performance monitoring
-- Peak sales analysis with time-based heatmaps
-- Custom SQL query interface
-- CRUD operations for database management
-
-## Technology Stack
-
-- **Backend:** Java 8+
-- **Frontend:** Java Swing
-- **Database:** MySQL
-- **Build Tool:** Maven
-
-## Screenshots
-
-<img width="1312" alt="Screenshot 2025-03-21 at 8 07 37 PM" src="https://github.com/user-attachments/assets/eb8b747a-462e-45c7-b29c-aa70b07b1ea1" />
-<img width="1312" alt="Screenshot 2025-03-21 at 8 07 49 PM" src="https://github.com/user-attachments/assets/17e73f6b-4d73-47e5-bb5b-2e7a24e0d63e" />
-<img width="1312" alt="Screenshot 2025-03-21 at 8 08 04 PM" src="https://github.com/user-attachments/assets/aa1a351a-8dad-4029-a06c-5d86bbcaa0d4" />
-<img width="1312" alt="Screenshot 2025-03-21 at 8 08 12 PM" src="https://github.com/user-attachments/assets/7aa5d6a4-a37b-441e-ac03-1ad154ea20cc" />
-<img width="1312" alt="Screenshot 2025-03-21 at 8 08 25 PM" src="https://github.com/user-attachments/assets/74624b7a-9085-42c1-89bf-502b03dcfbe4" />
-<img width="1312" alt="Screenshot 2025-03-21 at 8 08 42 PM" src="https://github.com/user-attachments/assets/d7decc53-b45b-4856-bfac-463a6b588f14" />
-
-
-
-## Prerequisites
-
-- Java 8 or higher
-- MySQL 5.7 or higher
-- Maven 3.6 or higher (for building from source)
-
-## Database Setup
-
-1. Install MySQL on your system if not already installed
-2. Create a new database:
-   ```sql
-   CREATE DATABASE visa_final_spring;
-   ```
-3. Run the database setup scripts:
-   ```
-   mysql -u username -p visa_final_spring < src/res/db/create_database.sql
-   mysql -u username -p visa_final_spring < src/res/db/insert_table.sql
-   ```
-
-## Database Features Setup
-
-After setting up the basic database, you can enable additional features by executing the following SQL scripts:
-
-1. Create audit and reporting tables:
-   ```
-   mysql -u username -p visa_final_spring < src/res/db/tables/audit_tables.sql
-   ```
-
-2. Set up transaction triggers:
-   ```
-   mysql -u username -p visa_final_spring < src/res/db/triggers/transaction_triggers.sql
-   ```
-
-3. Configure maintenance events:
-   ```
-   mysql -u username -p visa_final_spring < src/res/db/events/maintenance_events.sql
-   ```
-
-4. Create analytics functions:
-   ```
-   mysql -u username -p visa_final_spring < src/res/db/functions/analytics_functions.sql
-   ```
-
-### Available Analytics Queries
-
-The following pre-defined analytics queries are available in `src/res/db/queries/analytics_queries.sql`:
-
-1. Top Performing Banks Analysis:
-   ```sql
-   SELECT * FROM BankPerformanceReport 
-   WHERE report_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-   ORDER BY success_rate DESC;
-   ```
-
-2. Transaction Volume by Card Type:
-   ```sql
-   SELECT * FROM Transaction 
-   WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-   ORDER BY timestamp DESC;
-   ```
-
-3. Merchant Performance Metrics:
-   ```sql
-   SELECT * FROM PaymentMerchant 
-   WHERE merchant_id IN (
-       SELECT merchant_id 
-       FROM Transaction 
-       WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-   );
-   ```
-
-### Using Analytics Functions
-
-You can use the following functions in your queries:
-
-1. Calculate Success Rate:
-   ```sql
-   SELECT calculate_success_rate(bank_id, start_date, end_date) 
-   FROM AcquiringBank;
-   ```
-
-2. Get Daily Transaction Volume:
-   ```sql
-   SELECT get_daily_transaction_volume(CURDATE()) as today_volume;
-   ```
-
-### Monitoring Events
-
-The following automated events are configured:
-
-1. Daily Transaction Cleanup:
-   - Archives transactions older than 90 days
-   - Runs automatically every day
-
-2. Weekly Bank Performance Report:
-   - Generates performance metrics for all banks
-   - Runs automatically every week
-
-### Viewing Audit Logs
-
-To view transaction status changes:
-```sql
-SELECT * FROM TransactionAuditLog 
-ORDER BY change_timestamp DESC;
-```
-
-## Build & Run
-
-### From Source
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/VisaPaymentNetworkManager.git
-   cd VisaPaymentNetworkManager
-   ```
-
-2. Build the project using Maven:
-   ```
-   mvn clean package
-   ```
-
-3. Run the application:
-   ```
-   java -jar target/visa-payment-network-manager.jar
-   ```
-
-### Using Pre-built JAR
-
-1. Download the latest release JAR file
-2. Run the application:
-   ```
-   java -jar visa-payment-network-manager.jar
-   ```
-
-## Configuration
-
-Database connection parameters can be modified in the `DatabaseManager.java` file:
-```java
-private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/visa_final_spring";
-private static final String DEFAULT_USER = "root";
-private static final String DEFAULT_PASSWORD = "test123";
-```
-
-## Data Generation
-
-A Python script is included to generate synthetic transaction data for testing purposes:
-
-1. Install Python 3.6+ if not already installed
-2. Run the data generator:
-   ```
-   python data_generator.py --transactions 500 --output generated_data.sql --start-date 2025-01-01 --end-date 2025-05-31
-   ```
-3. Import the generated data:
-   ```
-   mysql -u username -p visa_final_spring < generated_data.sql
-   ```
+The Visa Payment Network Manager is a database management system designed to track, analyze, and visualize transaction data across the credit card payment ecosystem. The application provides a rich GUI interface for viewing transaction patterns, analyzing bank performance, monitoring card usage, and performing CRUD operations on all database entities.
 
 ## Features
 
+- **Dashboard Overview**: View summary statistics, transaction trends, and key performance indicators
+- **Card Usage Analysis**: Track card distributions, transaction volumes, and success rates by card type
+- **Bank Analysis**: Monitor issuing and acquiring bank performance with detailed transaction history
+- **Peak Sales Analytics**: Visualize transaction patterns by time of day and day of week with:
+  - Interactive time heatmaps
+  - Pie charts showing distribution by hour and day
+  - Bar charts for comparative analysis
+  - Detailed data tables with metrics
+- **Custom SQL Query Interface**: Execute and visualize custom SQL queries
+- **CRUD Operations**: Create, read, update, and delete records for all database entities
+- **Real-time Data Refresh**: Auto-refresh capabilities to ensure current data
+
+## System Requirements
+
+- Java 17 or higher
+- MySQL 8.0 or higher
+- Maven 3.6 or higher
+- At least 4GB RAM
+- 100MB free disk space
+
+## Database Setup
+
+1. Install MySQL if not already installed
+2. Create the database using the provided SQL script:
+
+```bash
+mysql -u root -p < src/res/db/create_database.sql
+```
+
+3. Load sample data (optional):
+
+```bash
+mysql -u root -p visa_final_spring < src/res/db/sample_data.sql
+```
+
+4. Set up stored procedures and triggers:
+
+```bash
+mysql -u root -p visa_final_spring < src/res/db/stored_procedures.sql
+mysql -u root -p visa_final_spring < src/res/db/triggers.sql
+mysql -u root -p visa_final_spring < src/res/db/events.sql
+```
+
+## Application Setup
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/visa-payment-network-manager.git
+cd visa-payment-network-manager
+```
+
+2. Update database connection settings in `src/main/java/payment/database/DatabaseManager.java`:
+
+```java
+private static final String DB_URL = "jdbc:mysql://localhost:3306/visa_final_spring";
+private static final String DB_USER = "your_username"; // Change to your MySQL username
+private static final String DB_PASSWORD = "your_password"; // Change to your MySQL password
+```
+
+3. Build the application with Maven:
+
+```bash
+mvn clean package
+```
+
+## Running the Application
+
+Run the application using the generated JAR file:
+
+```bash
+java -jar target/visa-payment-network-manager-1.0-SNAPSHOT.jar
+```
+
+Or use Maven:
+
+```bash
+mvn exec:java -Dexec.mainClass="payment.gui.VisaPaymentNetworkManager"
+```
+
+## Usage Guide
+
 ### Dashboard Overview
-- Transaction count and volume metrics
-- Success rate monitoring
-- Card type distribution
-- Top merchants tracking
-- Transaction status breakdown visualization
-- Hourly transaction volume chart
+- Displays summary statistics for transactions, active cards, and success rates
+- Shows charts for transaction volume over time and card type distribution
 
-### Card Usage Analysis
-- Card type distribution analysis
-- Popular cards by transaction volume
-- Trend analysis for card types
+### Card Usage Panel
+- View card distribution by type with interactive pie chart
+- Track transaction volumes with time-series charts
+- Monitor success rates across different card types
+- Explore transaction details in tabular format
 
-### Bank Analysis
-- Issuing bank performance metrics
-- Acquiring bank metrics
-- Approval rate analysis
-- Processing time tracking
+### Bank Analysis Panel
+- Select banks to view detailed performance metrics
+- Analyze transaction volume, average amount, and success rates
+- View transaction history for selected banks
+- Compare performance between different banks
 
 ### Peak Sales Analysis
-- Time-based heatmap visualization
-- Hourly transaction distribution
-- Weekday transaction patterns
+- Use interactive visualizations to identify high-volume periods
+- Filter by transaction count or value
+- Change timeframe to view patterns for today, last 7 days, last 30 days, or all time
+- Analyze hourly and weekday distribution with pie charts, bar charts, and heatmaps
 
-### Custom SQL Query Interface
-- Execute custom SQL queries
-- Save and load common queries
-- Export query results
+### Custom Query Panel
+- Execute custom SQL queries against the database
+- View results in tabular format
+- Export query results (where applicable)
 
 ### CRUD Operations
-- Create, read, update, and delete records
-- Dynamic form generation for any table
-- Validation and error handling
+- Select tables from dropdown menu
+- Create new records with form interface
+- Update existing records
+- Delete records with confirmation dialog
+- View all table data with real-time refresh
+
+## Architecture
+
+The application follows a layered architecture:
+
+1. **Presentation Layer**: Java Swing GUI components in `payment.gui` package
+2. **Service Layer**: Business logic and data processing
+3. **Data Access Layer**: Database connectivity through `DatabaseManager` and `QueryManager`
+4. **Database**: MySQL backend with tables for cards, transactions, banks, etc.
+
+## Server-Side Components
+
+The application leverages MySQL server-side components:
+
+- **Stored Procedures**: For complex transaction processing and analytics
+- **Triggers**: For maintaining data integrity and audit logging
+- **Events**: For scheduled maintenance tasks
+
+## Troubleshooting
+
+### Database Connection Issues
+- Verify MySQL is running: `systemctl status mysql` or `service mysql status`
+- Check connection parameters in `DatabaseManager.java`
+- Ensure the database and tables exist: `mysql -u root -p -e "SHOW DATABASES;"`
+
+### Display Issues
+- If charts don't render properly, ensure JFreeChart libraries are included
+- For Linux users, install the appropriate font packages: `sudo apt-get install fonts-dejavu`
+
+### Performance Issues
+- Increase JVM heap size: `java -Xmx1024m -jar target/visa-payment-network-manager-1.0-SNAPSHOT.jar`
+- Optimize database queries by adding appropriate indexes
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch: `git checkout -b new-feature`
+3. Commit changes: `git commit -am 'Add new feature'`
+4. Push to branch: `git push origin new-feature`
+5. Submit a pull request
 
 ## License
 
@@ -241,5 +170,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Northeastern University CS5200 Database Management course
-- Java Swing and MySQL communities
+- JFreeChart library for data visualization
+- MySQL Connector/J for database connectivity
+- Java Swing for the GUI components
