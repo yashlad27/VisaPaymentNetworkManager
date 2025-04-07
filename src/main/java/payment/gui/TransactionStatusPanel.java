@@ -16,7 +16,6 @@ import java.util.Locale;
  * Panel for displaying transaction status breakdown in a graphical format.
  */
 public class TransactionStatusPanel extends JPanel {
-    private final DatabaseManager dbManager;
     private final Connection connection;
 
     // Status categories
@@ -50,7 +49,6 @@ public class TransactionStatusPanel extends JPanel {
      * @param dbManager The database manager
      */
     public TransactionStatusPanel(DatabaseManager dbManager) {
-        this.dbManager = dbManager;
         this.connection = dbManager.getConnection();
 
         // Initialize data arrays
@@ -103,7 +101,7 @@ public class TransactionStatusPanel extends JPanel {
     /**
      * Create a legend item with color box and label.
      *
-     * @param text The label text
+     * @param text  The label text
      * @param color The color
      * @return The legend item panel
      */
