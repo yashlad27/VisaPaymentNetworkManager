@@ -368,71 +368,6 @@ public class BankAnalysisPanel extends JPanel {
         worker.execute();
     }
 
-    private void loadBankPerformanceData() {
-        try {
-            // First clear any existing data
-            if (issuingBankModel != null) {
-                issuingBankModel.setRowCount(0);
-            }
-
-            // Load acquiring bank data
-            String query = "SELECT " +
-                    "ab.acquiring_bank_id, " +
-                    "ab.bank_name, " +
-                    "COUNT(t.transaction_id) as total_transactions, " +
-                    "CASE WHEN COUNT(t.transaction_id) > 0 THEN " +
-                    "  ROUND((COUNT(CASE WHEN t.status = 'Approved' THEN 1 END) / COUNT(t.transaction_id)) * 100, 2) " +
-                    "ELSE 0 END as success_rate, " +
-                    "SUM(IFNULL(t.amount, 0)) as total_amount " +
-                    "FROM AcquiringBank ab " +
-                    "LEFT JOIN Transaction t ON ab.acquiring_bank_id = t.acquiring_bank_id " +
-                    "WHERE ab.is_active = true " +
-                    "GROUP BY ab.acquiring_bank_id " +
-                    "ORDER BY total_transactions DESC";
-
-            Connection conn = DatabaseManager.getConnection();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(query);
-
-            while (rs.next()) {
-                // Safely convert BigDecimal to double without direct casting
-                Object successRateObj = rs.getObject("success_rate");
-                double successRate = 0.0;
-                if (successRateObj instanceof BigDecimal) {
-                    successRate = ((BigDecimal) successRateObj).doubleValue();
-                } else if (successRateObj instanceof Double) {
-                    successRate = (Double) successRateObj;
-                } else if (successRateObj != null) {
-                    successRate = Double.parseDouble(successRateObj.toString());
-                }
-
-                Object totalAmountObj = rs.getObject("total_amount");
-                double totalAmount = 0.0;
-                if (totalAmountObj instanceof BigDecimal) {
-                    totalAmount = ((BigDecimal) totalAmountObj).doubleValue();
-                } else if (totalAmountObj instanceof Double) {
-                    totalAmount = (Double) totalAmountObj;
-                } else if (totalAmountObj != null) {
-                    totalAmount = Double.parseDouble(totalAmountObj.toString());
-                }
-
-                issuingBankModel.addRow(new Object[]{
-                        rs.getInt("acquiring_bank_id"),
-                        rs.getString("bank_name"),
-                        rs.getInt("total_transactions"),
-                        String.format("%.2f%%", successRate),
-                        currencyFormat.format(totalAmount)
-                });
-            }
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this,
-                    "Error loading bank performance data: " + e.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
     /**
      * Load detailed information for the selected bank.
      * <p>
@@ -441,31 +376,45 @@ public class BankAnalysisPanel extends JPanel {
      * </p>
      */
     private void loadBankDetails() {
+        if (selectedBankId == -1) {
+            // Clear labels if no bank is selected
+            bankNameLabel.setText("Bank: ");
+            bankCodeLabel.setText("Code: ");
+            totalTransactionsLabel.setText("Total Transactions: ");
+            totalAmountLabel.setText("Total Amount: ");
+            avgAmountLabel.setText("Average Amount: ");
+            successRateLabel.setText("Success Rate: ");
+            uniqueMerchantsLabel.setText("Unique Merchants: ");
+            return;
+        }
+
         try {
-            String query = "SELECT ab.*, " +
+            String query = "SELECT " +
+                    "ab.bank_name, " +
+                    "ab.bank_code, " +
                     "COUNT(t.transaction_id) as total_transactions, " +
                     "SUM(IFNULL(t.amount, 0)) as total_amount, " +
                     "AVG(IFNULL(t.amount, 0)) as avg_amount, " +
                     "COUNT(DISTINCT t.merchant_id) as unique_merchants, " +
                     "CASE WHEN COUNT(t.transaction_id) > 0 THEN " +
-                    "  ROUND((COUNT(CASE WHEN t.status = 'Approved' THEN 1 END) / COUNT(t.transaction_id)) * 100, 2) " +
+                    "  ROUND((COUNT(CASE WHEN t.status = 'SUCCESS' THEN 1 END) / COUNT(t.transaction_id)) * 100, 2) " +
                     "ELSE 0 END as success_rate " +
                     "FROM AcquiringBank ab " +
                     "LEFT JOIN Transaction t ON ab.acquiring_bank_id = t.acquiring_bank_id " +
-                    "WHERE ab.acquiring_bank_id = ? " +
-                    "GROUP BY ab.acquiring_bank_id";
+                    "WHERE ab.acquiring_bank_id = ? AND ab.is_active = true " +
+                    "GROUP BY ab.acquiring_bank_id, ab.bank_name, ab.bank_code";
 
-            Connection conn = DatabaseManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(query);
+            PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setInt(1, selectedBankId);
-
             ResultSet rs = stmt.executeQuery();
+
             if (rs.next()) {
+                // Update labels with bank information
                 bankNameLabel.setText("Bank: " + rs.getString("bank_name"));
                 bankCodeLabel.setText("Code: " + rs.getString("bank_code"));
                 totalTransactionsLabel.setText("Total Transactions: " + rs.getInt("total_transactions"));
 
-                // Safely convert BigDecimal to double
+                // Safely convert BigDecimal to double for amounts
                 Object totalAmountObj = rs.getObject("total_amount");
                 double totalAmount = 0.0;
                 if (totalAmountObj instanceof BigDecimal) {
@@ -496,15 +445,98 @@ public class BankAnalysisPanel extends JPanel {
                     successRate = Double.parseDouble(successRateObj.toString());
                 }
 
+                // Format and display the values
                 totalAmountLabel.setText("Total Amount: " + currencyFormat.format(totalAmount));
                 avgAmountLabel.setText("Average Amount: " + currencyFormat.format(avgAmount));
                 successRateLabel.setText("Success Rate: " + String.format("%.2f%%", successRate));
                 uniqueMerchantsLabel.setText("Unique Merchants: " + rs.getInt("unique_merchants"));
+            } else {
+                // Clear labels if no data found
+                bankNameLabel.setText("Bank: N/A");
+                bankCodeLabel.setText("Code: N/A");
+                totalTransactionsLabel.setText("Total Transactions: 0");
+                totalAmountLabel.setText("Total Amount: " + currencyFormat.format(0));
+                avgAmountLabel.setText("Average Amount: " + currencyFormat.format(0));
+                successRateLabel.setText("Success Rate: 0.00%");
+                uniqueMerchantsLabel.setText("Unique Merchants: 0");
             }
 
         } catch (SQLException e) {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this,
                     "Error loading bank details: " + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Load bank performance data for all banks.
+     * <p>
+     * Retrieves performance metrics for all active banks and populates
+     * the bank table with this information.
+     * </p>
+     */
+    private void loadBankPerformanceData() {
+        try {
+            // First clear any existing data
+            if (issuingBankModel != null) {
+                issuingBankModel.setRowCount(0);
+            }
+
+            // Load acquiring bank data
+            String query = "SELECT " +
+                    "ab.acquiring_bank_id, " +
+                    "ab.bank_name, " +
+                    "COUNT(t.transaction_id) as total_transactions, " +
+                    "CASE WHEN COUNT(t.transaction_id) > 0 THEN " +
+                    "  ROUND((COUNT(CASE WHEN t.status = 'SUCCESS' THEN 1 END) / COUNT(t.transaction_id)) * 100, 2) " +
+                    "ELSE 0 END as success_rate, " +
+                    "SUM(IFNULL(t.amount, 0)) as total_amount " +
+                    "FROM AcquiringBank ab " +
+                    "LEFT JOIN Transaction t ON ab.acquiring_bank_id = t.acquiring_bank_id " +
+                    "WHERE ab.is_active = true " +
+                    "GROUP BY ab.acquiring_bank_id, ab.bank_name " +
+                    "ORDER BY total_transactions DESC";
+
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+
+            while (rs.next()) {
+                // Safely convert BigDecimal to double
+                Object successRateObj = rs.getObject("success_rate");
+                double successRate = 0.0;
+                if (successRateObj instanceof BigDecimal) {
+                    successRate = ((BigDecimal) successRateObj).doubleValue();
+                } else if (successRateObj instanceof Double) {
+                    successRate = (Double) successRateObj;
+                } else if (successRateObj != null) {
+                    successRate = Double.parseDouble(successRateObj.toString());
+                }
+
+                Object totalAmountObj = rs.getObject("total_amount");
+                double totalAmount = 0.0;
+                if (totalAmountObj instanceof BigDecimal) {
+                    totalAmount = ((BigDecimal) totalAmountObj).doubleValue();
+                } else if (totalAmountObj instanceof Double) {
+                    totalAmount = (Double) totalAmountObj;
+                } else if (totalAmountObj != null) {
+                    totalAmount = Double.parseDouble(totalAmountObj.toString());
+                }
+
+                issuingBankModel.addRow(new Object[]{
+                        rs.getInt("acquiring_bank_id"),
+                        rs.getString("bank_name"),
+                        rs.getInt("total_transactions"),
+                        String.format("%.2f%%", successRate),
+                        currencyFormat.format(totalAmount)
+                });
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error loading bank performance data: " + e.getMessage(),
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE);
         }
