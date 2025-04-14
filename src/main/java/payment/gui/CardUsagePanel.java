@@ -301,7 +301,7 @@ public class CardUsagePanel extends AbstractAnalysisPanel {
             "m.merchant_name " +
             "FROM Transaction t " +
             "JOIN Card c ON t.card_id = c.card_id " +
-            "JOIN Merchant m ON t.merchant_id = m.merchant_id " +
+            "JOIN PaymentMerchant m ON t.merchant_id = m.merchant_id " +
             "ORDER BY t.timestamp DESC " +
             "LIMIT 100";
 

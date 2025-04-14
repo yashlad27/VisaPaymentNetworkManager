@@ -174,11 +174,11 @@ public class PeakSalesPanel extends AbstractAnalysisPanel {
         merchantPerformanceModel.setRowCount(0);
         String query = "SELECT " +
             "m.merchant_name, " +
-            "COUNT(t.transaction_id) as transactions, " +
+            "COUNT(*) as transaction_count, " +
             "SUM(t.amount) as total_amount, " +
-            "ROUND((COUNT(CASE WHEN t.status = 'SUCCESS' THEN 1 END) / COUNT(t.transaction_id)) * 100, 2) as success_rate " +
+            "AVG(CASE WHEN t.status = 'Approved' THEN 1 ELSE 0 END) as success_rate " +
             "FROM Transaction t " +
-            "JOIN Merchant m ON t.merchant_id = m.merchant_id " +
+            "JOIN PaymentMerchant m ON t.merchant_id = m.merchant_id " +
             "GROUP BY m.merchant_id, m.merchant_name " +
             "ORDER BY transactions DESC";
 
