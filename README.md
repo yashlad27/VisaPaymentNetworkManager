@@ -1,175 +1,341 @@
-# Visa Payment Network Manager
+# Visa Payment Network Manager - Final Project Report
 
-A comprehensive Java Swing application for managing and analyzing credit card payment transactions within the Visa payment network.
+## 1. README: Installation and Setup Guide
 
-## Project Overview
+### System Requirements
+- **Java Development Kit (JDK)** 11 or higher
+- **MySQL** 8.0 or higher
+- **Maven** 3.6.3 or higher (for dependency management)
 
-The Visa Payment Network Manager is a database management system designed to track, analyze, and visualize transaction data across the credit card payment ecosystem. The application provides a rich GUI interface for viewing transaction patterns, analyzing bank performance, monitoring card usage, and performing CRUD operations on all database entities.
+### Required Libraries
+- **Java Swing**: Built-in GUI toolkit (included with JDK)
+- **JDBC MySQL Connector**: Version 8.0.23 or higher
+- **JFreeChart**: Version 1.5.3 for data visualization
+- **Log4j**: Version 2.14.1 for logging
 
-## Features
+### Installation Steps
 
-- **Dashboard Overview**: View summary statistics, transaction trends, and key performance indicators
-- **Card Usage Analysis**: Track card distributions, transaction volumes, and success rates by card type
-- **Bank Analysis**: Monitor issuing and acquiring bank performance with detailed transaction history
-- **Peak Sales Analytics**: Visualize transaction patterns by time of day and day of week with:
-  - Interactive time heatmaps
-  - Pie charts showing distribution by hour and day
-  - Bar charts for comparative analysis
-  - Detailed data tables with metrics
-- **Custom SQL Query Interface**: Execute and visualize custom SQL queries
-- **CRUD Operations**: Create, read, update, and delete records for all database entities
-- **Real-time Data Refresh**: Auto-refresh capabilities to ensure current data
+1. **Install JDK 11+**
+  - Download from: https://www.oracle.com/java/technologies/javase-jdk11-downloads.html
+  - Set JAVA_HOME environment variable to your JDK installation directory
 
-## System Requirements
+2. **Install MySQL 8.0+**
+  - Download from: https://dev.mysql.com/downloads/mysql/
+  - Create a user with the following credentials:
+    - Username: `root`
+    - Password: `test123`
+  - Or modify the `DatabaseManager.java` file with your preferred credentials
 
-- Java 17 or higher
-- MySQL 8.0 or higher
-- Maven 3.6 or higher
-- At least 4GB RAM
-- 100MB free disk space
+3. **Install Maven**
+  - Download from: https://maven.apache.org/download.cgi
+  - Add Maven to your PATH environment variable
 
-## Database Setup
+4. **Database Setup**
+  - Run the SQL scripts in the following order:
+    1. `src/res/db/create_database.sql`
+    2. `src/res/db/insert_table.sql`
+    3. `src/res/db/tables/audit_tables.sql`
+    4. `src/res/db/triggers/transaction_triggers.sql`
+    5. `src/res/db/functions/analytics_functions.sql`
+    6. `src/res/db/events/events.sql`
+    7. `src/res/db/events/maintenance_events.sql`
 
-1. Install MySQL if not already installed
-2. Create the database using the provided SQL script:
+5. **Project Setup**
+  - Clone the repository or extract the project files
+  - Navigate to the project root directory
+  - Run `mvn clean install` to download dependencies and build the project
 
-```bash
-mysql -u root -p < src/res/db/create_database.sql
+6. **Running the Application**
+  - Execute `mvn exec:java -Dexec.mainClass="payment.gui.VisaPaymentNetworkManager"` to start the application
+  - Or run the compiled JAR file with `java -jar visa-payment-network-manager.jar`
+
+### Expected Directory Structure
+```
+VisaPaymentNetworkManager/
+│
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   ├── payment/
+│   │   │   │   ├── database/
+│   │   │   │   │   ├── DatabaseManager.java
+│   │   │   │   │   ├── QueryManager.java
+│   │   │   │   │   └── ...
+│   │   │   │   ├── gui/
+│   │   │   │   │   ├── VisaPaymentNetworkManager.java
+│   │   │   │   │   ├── DashboardPanel.java
+│   │   │   │   │   ├── CardUsagePanel.java
+│   │   │   │   │   ├── BankAnalysisPanel.java
+│   │   │   │   │   ├── PeakSalesPanel.java
+│   │   │   │   │   ├── QueryPanel.java
+│   │   │   │   │   ├── CRUDPanel.java
+│   │   │   │   │   └── ...
+│   │   │   │   └── models/
+│   │   │   └── ...
+│   │   └── resources/
+│   │       ├── db/
+│   │       │   ├── create_database.sql
+│   │       │   ├── insert_table.sql
+│   │       │   ├── events/
+│   │       │   ├── functions/
+│   │       │   ├── queries/
+│   │       │   ├── tables/
+│   │       │   └── triggers/
+│   └── test/
+│
+└── pom.xml
 ```
 
-3. Load sample data (optional):
+## 2. Technical Specifications
 
-```bash
-mysql -u root -p visa_final_spring < src/res/db/sample_data.sql
-```
+### Programming Languages
+- **Java 11**: Core application language
+- **SQL**: Database queries and schema definition
 
-4. Set up stored procedures and triggers:
+### Frameworks and Libraries
+- **Java Swing**: GUI framework for creating desktop application
+- **JDBC**: Java Database Connectivity for MySQL interaction
+- **JFreeChart**: Library for creating charts and visualizations
+- **MySQL**: Relational database management system
 
-```bash
-mysql -u root -p visa_final_spring < src/res/db/stored_procedures.sql
-mysql -u root -p visa_final_spring < src/res/db/triggers.sql
-mysql -u root -p visa_final_spring < src/res/db/events.sql
-```
+### Architecture
+- **Three-tier architecture**:
+  - Presentation Layer: Java Swing GUI components in `payment.gui` package
+  - Business Logic Layer: Service classes handling data processing and business rules
+  - Data Access Layer: Database connection and query execution in `payment.database` package
 
-## Application Setup
+### Design Patterns
+- **Singleton Pattern**: Used for `DatabaseManager` to ensure a single database connection instance
+- **MVC Pattern**: Separation of data models, visual components, and business logic
+- **Observer Pattern**: Used for real-time updates in dashboard components
 
-1. Clone the repository:
+### Key Components
+- **Database Manager**: Handles connection pooling and query execution
+- **Query Manager**: Manages predefined queries and query execution
+- **GUI Panels**: Specialized panels for different aspects of the payment network
+  - Dashboard Panel: Overview with key metrics
+  - Card Usage Panel: Analysis of card type usage
+  - Bank Analysis Panel: Performance metrics for banks
+  - Peak Sales Panel: Analysis of transaction patterns
+  - Query Panel: Custom SQL query execution
+  - CRUD Panel: Database record management
 
-```bash
-git clone https://github.com/yourusername/visa-payment-network-manager.git
-cd visa-payment-network-manager
-```
+## 3. Conceptual Design (UML Diagram)
 
-2. Update database connection settings in `src/main/java/payment/database/DatabaseManager.java`:
+[UML Diagram Image to be inserted here]
 
-```java
-private static final String DB_URL = "jdbc:mysql://localhost:3306/visa_final_spring";
-private static final String DB_USER = "your_username"; // Change to your MySQL username
-private static final String DB_PASSWORD = "your_password"; // Change to your MySQL password
-```
+## 4. Logical Database Design
 
-3. Build the application with Maven:
+[Database ERD Image to be inserted here]
 
-```bash
-mvn clean package
-```
+### Core Entity Tables
+- **Cardholder**: Stores information about card holders
+- **Card**: Stores credit card information with foreign key to Cardholder
+- **IssuingBank**: Banks that issue cards to customers
+- **AcquiringBank**: Banks that process card transactions for merchants
+- **PaymentMerchant**: Merchants who accept card payments
+- **Exchange**: Settlement exchanges between banks
 
-## Running the Application
+### Transaction-Related Tables
+- **Transaction**: Central table for all payment transactions
+- **Authorization**: Authorization requests for transactions
+- **AuthResponse**: Responses to authorization requests
+- **Settlement**: Settlement records for approved transactions
+- **InterchangeFee**: Fee structures for different card types
 
-Run the application using the generated JAR file:
+### Audit and Analytics Tables
+- **CardStatusLog**: Tracks changes to card statuses
+- **TransactionAuditLog**: Audit trail for transaction status changes
+- **ArchivedTransactions**: Storage for old transactions
+- **BankPerformanceReport**: Aggregated bank performance metrics
+- **DailyTransactionSummary**: Daily transaction statistics
 
-```bash
-java -jar target/visa-payment-network-manager-1.0-SNAPSHOT.jar
-```
+### Database Features
+- **Normalization**: Tables are normalized to 3NF
+- **Constraints**: Primary keys, foreign keys, unique constraints
+- **Triggers**: Automated data validation and audit logging
+- **Stored Procedures**: Predefined database operations
+- **Functions**: Reusable calculations for analytics
+- **Events**: Scheduled tasks for maintenance and reporting
 
-Or use Maven:
+### Key Relationships
+- A Cardholder can have multiple Cards
+- A Card belongs to one IssuingBank
+- A Transaction involves one Card, one PaymentMerchant, and one AcquiringBank
+- A Transaction has one Authorization, which can have one AuthResponse
+- Successful Transactions have one Settlement record
+- Each Exchange has multiple InterchangeFee records for different card types
 
-```bash
-mvn exec:java -Dexec.mainClass="payment.gui.VisaPaymentNetworkManager"
-```
+## 5. User Flow and Interaction
 
-## Usage Guide
+### Application Launch
+1. User starts the Visa Payment Network Manager application
+2. The application connects to the MySQL database
+3. The main window appears with the Dashboard Overview tab active
 
-### Dashboard Overview
-- Displays summary statistics for transactions, active cards, and success rates
-- Shows charts for transaction volume over time and card type distribution
+### Dashboard Overview Tab
+1. User views key performance indicators (KPIs)
+  - Total transactions
+  - Total value
+  - Today's metrics compared to yesterday
+  - Success rate
+2. User examines card type distribution chart
+3. User reviews transaction status breakdown
+4. User analyzes hourly transaction volume patterns
+5. User views top merchants table
 
-### Card Usage Panel
-- View card distribution by type with interactive pie chart
-- Track transaction volumes with time-series charts
-- Monitor success rates across different card types
-- Explore transaction details in tabular format
+### Card Usage Tab
+1. User views card distribution statistics
+  - Total cards
+  - Active cards
+  - Transaction counts and volumes
+2. User reviews card type pie chart and transaction volume charts
+3. User selects a card type from the table
+4. User views detailed transaction history for the selected card type
 
-### Bank Analysis Panel
-- Select banks to view detailed performance metrics
-- Analyze transaction volume, average amount, and success rates
-- View transaction history for selected banks
-- Compare performance between different banks
+### Bank Analysis Tab
+1. User views bank performance metrics
+2. User selects a bank from the table
+3. User reviews detailed bank information
+  - Success rate
+  - Total transactions
+  - Average transaction amount
+  - Unique merchants
+4. User examines transaction history for the selected bank
 
-### Peak Sales Analysis
-- Use interactive visualizations to identify high-volume periods
-- Filter by transaction count or value
-- Change timeframe to view patterns for today, last 7 days, last 30 days, or all time
-- Analyze hourly and weekday distribution with pie charts, bar charts, and heatmaps
+### Peak Sales Tab
+1. User selects view mode (Transaction Count or Transaction Value)
+2. User selects timeframe (Today, Last 7 Days, Last 30 Days, All Time)
+3. User examines hourly transaction distribution
+4. User switches to the Weekday Analysis tab
+5. User examines transaction patterns by day of week
+6. User switches to the Time Heatmap tab
+7. User views time-based heatmap showing transaction density
 
-### Custom Query Panel
-- Execute custom SQL queries against the database
-- View results in tabular format
-- Export query results (where applicable)
+### Custom Query Tab
+1. User selects a saved query from the dropdown or writes a custom SQL query
+2. User clicks "Execute" to run the query
+3. User views the query results in the table
+4. User can save the query for future use
 
-### CRUD Operations
-- Select tables from dropdown menu
-- Create new records with form interface
-- Update existing records
-- Delete records with confirmation dialog
-- View all table data with real-time refresh
+### CRUD Operations Tab
+1. User selects a database table from the dropdown
+2. User views existing records in the table
+3. User performs database operations:
+  - Create: Fill in the form and click "Create" to add a new record
+  - Read: Select a record to view its details
+  - Update: Modify fields of a selected record and click "Update"
+  - Delete: Select a record and click "Delete" to remove it
 
-## Architecture
+### Data Refresh
+- Automatic refresh: All panels refresh data at regular intervals
+- Manual refresh: User can click "Refresh" buttons to update data immediately
 
-The application follows a layered architecture:
+## 6. Lessons Learned
 
-1. **Presentation Layer**: Java Swing GUI components in `payment.gui` package
-2. **Service Layer**: Business logic and data processing
-3. **Data Access Layer**: Database connectivity through `DatabaseManager` and `QueryManager`
-4. **Database**: MySQL backend with tables for cards, transactions, banks, etc.
+### Technical Expertise Gained
 
-## Server-Side Components
+#### Database Design and Optimization
+- Designed a complex relational database schema with multiple interconnected tables
+- Implemented normalization principles to reduce data redundancy
+- Created database constraints to maintain data integrity
+- Developed triggers, stored procedures, and events for automated database operations
+- Gained experience with transaction processing and audit logging
 
-The application leverages MySQL server-side components:
+#### Java Swing GUI Development
+- Built a responsive desktop application using Java Swing
+- Implemented custom components for data visualization
+- Created reusable UI patterns for consistent user experience
+- Managed background threads for responsive UI during data operations
+- Developed real-time data updates with automatic refresh mechanisms
 
-- **Stored Procedures**: For complex transaction processing and analytics
-- **Triggers**: For maintaining data integrity and audit logging
-- **Events**: For scheduled maintenance tasks
+#### Data Visualization Techniques
+- Implemented various chart types (pie, bar, line) using JFreeChart
+- Created a custom heatmap visualization for time-based data analysis
+- Designed interactive dashboards with drill-down capabilities
+- Formatted numerical data for better readability and comprehension
 
-## Troubleshooting
+#### Database Connectivity
+- Implemented a robust database connection manager with proper resource handling
+- Created parameterized queries to prevent SQL injection
+- Designed a query caching system for improved performance
+- Developed error handling and user feedback for database operations
 
-### Database Connection Issues
-- Verify MySQL is running: `systemctl status mysql` or `service mysql status`
-- Check connection parameters in `DatabaseManager.java`
-- Ensure the database and tables exist: `mysql -u root -p -e "SHOW DATABASES;"`
+### Insights and Challenges
 
-### Display Issues
-- If charts don't render properly, ensure JFreeChart libraries are included
-- For Linux users, install the appropriate font packages: `sudo apt-get install fonts-dejavu`
+#### Time Management
+- Complex UI components required more time than initially estimated
+- Database schema design iterations took longer than expected
+- Breaking the project into smaller, manageable modules helped maintain progress
+- Setting intermediate milestones provided better visibility into project status
 
-### Performance Issues
-- Increase JVM heap size: `java -Xmx1024m -jar target/visa-payment-network-manager-1.0-SNAPSHOT.jar`
-- Optimize database queries by adding appropriate indexes
+#### Data Domain Insights
+- Credit card transaction processing involves multiple parties and steps
+- Real-time analytics require efficient data processing and presentation
+- Financial data visualization needs careful consideration for accuracy and clarity
+- Authentication and authorization workflows are complex in payment processing
 
-## Contributing
+#### Technical Challenges
+- Managing concurrent database access required careful design
+- Large result sets needed efficient processing to avoid memory issues
+- Real-time updates required balancing refresh frequency with performance
+- Handling different data types and formats across the database schema
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b new-feature`
-3. Commit changes: `git commit -am 'Add new feature'`
-4. Push to branch: `git push origin new-feature`
-5. Submit a pull request
+### Alternative Design Approaches
 
-## License
+#### Architecture Alternatives
+- **Web Application**: Considered implementing as a web application with Spring Boot and React
+  - Pros: Easier deployment, cross-platform accessibility
+  - Cons: More complex setup, additional security considerations
+  - Decision: Chose desktop application for simplicity and direct database access
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+#### Database Design Alternatives
+- **NoSQL Approach**: Considered MongoDB for flexible schema
+  - Pros: Easier to evolve schema, potentially better performance for certain queries
+  - Cons: Less structured relationships, less support for complex transactions
+  - Decision: Chose relational database for strong transaction support and integrity
 
-## Acknowledgments
+#### UI Design Alternatives
+- **JavaFX vs. Swing**: Considered JavaFX for modern UI components
+  - Pros: More modern look, better styling options
+  - Cons: Steeper learning curve, additional dependencies
+  - Decision: Chose Swing for compatibility and simplicity
 
-- JFreeChart library for data visualization
-- MySQL Connector/J for database connectivity
-- Java Swing for the GUI components
+### Issues and Limitations
+
+#### Known Issues
+- The CRUDPanel doesn't handle all data types correctly (e.g., BLOB, JSON)
+- Some charts may not scale correctly with very large datasets
+- The database connection doesn't implement proper connection pooling
+- Query timeout handling is not fully implemented
+
+## 7. Future Work
+
+### Planned Database Enhancements
+1. **Data Partitioning**: Implement table partitioning for transaction history
+2. **Performance Optimization**: Add additional indexes for common query patterns
+3. **Advanced Analytics**: Create more complex stored procedures for trend analysis
+4. **Data Archiving**: Implement a comprehensive archiving strategy for historical data
+
+### Potential Feature Additions
+1. **User Authentication**: Add user accounts with role-based access control
+2. **Transaction Simulation**: Create a module to simulate and test transaction flows
+3. **Fraud Detection**: Implement machine learning models for fraud pattern detection
+4. **Report Generation**: Add export functionality for reports in PDF/Excel formats
+5. **Mobile Companion App**: Develop a mobile application for on-the-go monitoring
+
+### Integration Opportunities
+1. **API Integration**: Create REST APIs to integrate with external systems
+2. **Real-time Alerts**: Implement notification system for anomalous transactions
+3. **Data Import/Export**: Add support for importing external data sources
+4. **Compliance Reporting**: Add modules for regulatory reporting requirements
+
+### Performance Improvements
+1. **Connection Pooling**: Implement proper database connection pooling
+2. **Query Optimization**: Analyze and optimize slow-running queries
+3. **Caching Strategy**: Implement a more sophisticated caching system
+4. **UI Responsiveness**: Improve background thread management for smoother UI
+
+The Visa Payment Network Manager provides a solid foundation for financial transaction analysis and management. 
+With the planned enhancements and additions, it can evolve into a comprehensive solution for payment network monitoring, 
+analysis, and management.
