@@ -1,6 +1,7 @@
 package payment.gui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,17 +9,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.NumberFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
-import javax.swing.*;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import payment.database.DatabaseManager;
-import payment.database.QueryManager;
 
 /**
  * Panel for analyzing bank performance and transaction data in the payment network.
@@ -44,7 +49,7 @@ import payment.database.QueryManager;
  * for database values to ensure correct display of numerical data.
  * </p>
  */
-public class BankAnalysisPanel extends JPanel {
+public class BankAnalysisPanel extends AbstractAnalysisPanel {
     /**
      * Database manager instance for database connectivity
      */
@@ -155,6 +160,7 @@ public class BankAnalysisPanel extends JPanel {
      * @throws IllegalArgumentException if dbManager is null
      */
     public BankAnalysisPanel(DatabaseManager dbManager) {
+        super(dbManager);
         if (dbManager == null) {
             throw new IllegalArgumentException("Database manager cannot be null");
         }
@@ -165,54 +171,23 @@ public class BankAnalysisPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Initialize table models first
         initTableModels();
-
-        // Initialize UI components
         initComponents();
-
-        // Load initial data
         refreshData();
-
-        // Set up auto-refresh timer
         setupRefreshTimer();
     }
 
-    /**
-     * Initialize UI components.
-     * <p>
-     * Creates and lays out all UI components including the bank details panel
-     * and transaction history panel. Sets up the main panel with a border layout
-     * to organize these elements.
-     * </p>
-     */
-    private void initComponents() {
-        // Create main panel with card layout
+    @Override
+    public void initComponents() {
         JPanel mainPanel = new JPanel(new BorderLayout());
-
-        // Create bank details panel
         JPanel bankDetailsPanel = createBankDetailsPanel();
-
-        // Create transaction history panel
         JPanel transactionPanel = createTransactionPanel();
-
-        // Add panels to main panel
         mainPanel.add(bankDetailsPanel, BorderLayout.CENTER);
-
-        // Add main panel to this panel
         add(mainPanel, BorderLayout.CENTER);
     }
 
-    /**
-     * Initialize table models for bank and transaction data.
-     * <p>
-     * Creates the table models with appropriate columns and sets up
-     * non-editable cells for display-only data. These models are used
-     * to populate the data tables in the UI.
-     * </p>
-     */
-    private void initTableModels() {
-        // Bank table model
+    @Override
+    public void initTableModels() {
         String[] bankColumns = {"Bank ID", "Bank Name", "Total Transactions", "Success Rate", "Total Amount"};
         issuingBankModel = new DefaultTableModel(bankColumns, 0) {
             @Override
@@ -229,7 +204,7 @@ public class BankAnalysisPanel extends JPanel {
 
         // Transaction table model
         String[] transactionColumns = {
-                "Timestamp", "Merchant", "Card Type", "Amount",
+                "Timestamp", "PaymentMerchant", "Card Type", "Amount",
                 "Status", "Auth Code", "Response Code"
         };
         transactionModel = new DefaultTableModel(transactionColumns, 0) {
@@ -239,6 +214,30 @@ public class BankAnalysisPanel extends JPanel {
             }
         };
         transactionTable = new JTable(transactionModel);
+    }
+
+    @Override
+    public void refreshData() {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                try {
+                    loadBankPerformanceData();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    SwingUtilities.invokeLater(() ->
+                            JOptionPane.showMessageDialog(
+                                    BankAnalysisPanel.this,
+                                    "Error refreshing data: " + e.getMessage(),
+                                    "Database Error",
+                                    JOptionPane.ERROR_MESSAGE
+                            )
+                    );
+                }
+                return null;
+            }
+        };
+        worker.execute();
     }
 
     /**
@@ -258,7 +257,6 @@ public class BankAnalysisPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Create labels
         bankNameLabel = new JLabel("Bank: ");
         bankCodeLabel = new JLabel("Code: ");
         totalTransactionsLabel = new JLabel("Total Transactions: ");
@@ -267,7 +265,6 @@ public class BankAnalysisPanel extends JPanel {
         successRateLabel = new JLabel("Success Rate: ");
         uniqueMerchantsLabel = new JLabel("Unique Merchants: ");
 
-        // Create info panel
         JPanel infoPanel = new JPanel(new GridLayout(7, 1, 5, 5));
         infoPanel.add(bankNameLabel);
         infoPanel.add(bankCodeLabel);
@@ -277,7 +274,6 @@ public class BankAnalysisPanel extends JPanel {
         infoPanel.add(successRateLabel);
         infoPanel.add(uniqueMerchantsLabel);
 
-        // Add bank table
         JScrollPane tableScroll = new JScrollPane(bankTable);
         bankTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && bankTable.getSelectedRow() != -1) {
@@ -332,40 +328,10 @@ public class BankAnalysisPanel extends JPanel {
      * that the displayed information remains current.
      * </p>
      */
-    private void setupRefreshTimer() {
+    @Override
+    public void setupRefreshTimer() {
         refreshTimer = new Timer(REFRESH_INTERVAL, e -> refreshData());
         refreshTimer.start();
-    }
-
-    /**
-     * Refresh all data from the database.
-     * <p>
-     * Reloads bank data and transaction history from the database based on
-     * the current selection state. If a bank is selected, also refreshes
-     * the bank details and transaction history for that bank.
-     * </p>
-     */
-    private void refreshData() {
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() {
-                try {
-                    loadBankPerformanceData();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    SwingUtilities.invokeLater(() ->
-                            JOptionPane.showMessageDialog(
-                                    BankAnalysisPanel.this,
-                                    "Error refreshing data: " + e.getMessage(),
-                                    "Database Error",
-                                    JOptionPane.ERROR_MESSAGE
-                            )
-                    );
-                }
-                return null;
-            }
-        };
-        worker.execute();
     }
 
     /**

@@ -1,6 +1,14 @@
 package payment.gui;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -10,7 +18,18 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
@@ -44,7 +63,7 @@ import payment.database.DatabaseManager;
  * are updated automatically at regular intervals to provide real-time insights.
  * </p>
  */
-public class DashboardPanel extends JPanel {
+public class DashboardPanel extends AbstractAnalysisPanel {
     /**
      * Database manager instance for database connectivity
      */
@@ -146,6 +165,7 @@ public class DashboardPanel extends JPanel {
      * @throws IllegalArgumentException if dbManager is null
      */
     public DashboardPanel(DatabaseManager dbManager) {
+        super(dbManager);
         if (dbManager == null) {
             throw new IllegalArgumentException("Database manager cannot be null");
         }
@@ -181,7 +201,8 @@ public class DashboardPanel extends JPanel {
      * Uses GridBagLayout for precise component positioning and sizing.
      * </p>
      */
-    private void initComponents() {
+    @Override
+    public void initComponents() {
         // Create title and control panel at the top
         JPanel headerPanel = createHeaderPanel();
         add(headerPanel, BorderLayout.NORTH);
@@ -359,9 +380,7 @@ public class DashboardPanel extends JPanel {
         ));
 
         // Create card type table
-        String[] cardTypeColumns = {"Card Type", "Transaction Count", "Total Amount", "% of Total"};
-        cardTypeTableModel = new DefaultTableModel(cardTypeColumns, 0);
-        cardTypeTable = new JTable(cardTypeTableModel);
+        initTableModels();
         cardTypePanel.add(new JScrollPane(cardTypeTable), BorderLayout.CENTER);
 
         // Transaction status panel - Using the new TransactionStatusPanel
@@ -400,9 +419,6 @@ public class DashboardPanel extends JPanel {
         ));
 
         // Create merchants table
-        String[] merchantColumns = {"Merchant", "Category", "Transactions", "Total Amount"};
-        merchantsTableModel = new DefaultTableModel(merchantColumns, 0);
-        topMerchantsTable = new JTable(merchantsTableModel);
         merchantsPanel.add(new JScrollPane(topMerchantsTable), BorderLayout.CENTER);
 
         // Add all panels
@@ -414,6 +430,29 @@ public class DashboardPanel extends JPanel {
         return panel;
     }
 
+    @Override
+    public void initTableModels() {
+        // Initialize card type table model
+        String[] cardTypeColumns = {"Card Type", "Transaction Count", "Total Amount", "% of Total"};
+        cardTypeTableModel = new DefaultTableModel(cardTypeColumns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        cardTypeTable = new JTable(cardTypeTableModel);
+
+        // Initialize merchants table model
+        String[] merchantColumns = {"Merchant", "Category", "Transactions", "Total Amount"};
+        merchantsTableModel = new DefaultTableModel(merchantColumns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        topMerchantsTable = new JTable(merchantsTableModel);
+    }
+
     /**
      * Set up the automatic data refresh timer.
      * <p>
@@ -421,7 +460,8 @@ public class DashboardPanel extends JPanel {
      * that the displayed information remains current.
      * </p>
      */
-    private void setupRefreshTimer() {
+    @Override
+    public void setupRefreshTimer() {
         refreshTimer = new Timer(REFRESH_INTERVAL, e -> refreshData());
         refreshTimer.start();
     }
@@ -447,7 +487,8 @@ public class DashboardPanel extends JPanel {
      * thread to prevent UI freezing.
      * </p>
      */
-    private void refreshData() {
+    @Override
+    public void refreshData() {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
