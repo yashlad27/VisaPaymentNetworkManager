@@ -121,12 +121,12 @@ VisaPaymentNetworkManager/
   - CRUD Panel: Database record management
 
 ## 3. Conceptual Design (UML Diagram)
+![CS5200_Final_UML drawio](https://github.com/user-attachments/assets/f65ee6a5-9824-4f7d-8723-e2809f846e04)
 
-[UML Diagram Image to be inserted here]
 
 ## 4. Logical Database Design
+![image](https://github.com/user-attachments/assets/d4bdc980-f6b9-47d2-8e90-a91b6dd3f6e8)
 
-[Database ERD Image to be inserted here]
 
 ### Core Entity Tables
 - **Cardholder**: Stores information about card holders
