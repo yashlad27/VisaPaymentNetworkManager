@@ -18,28 +18,23 @@ import java.util.Locale;
 public class TransactionStatusPanel extends JPanel {
     private final Connection connection;
 
-    // Status categories
     private static final String[] STATUS_TYPES = {"Approved", "Declined", "Pending"};
 
-    // Colors for different statuses
     private static final Color[] STATUS_COLORS = {
             new Color(46, 139, 87),  // Approved - SeaGreen
             new Color(178, 34, 34),  // Declined - Firebrick
             new Color(255, 165, 0)   // Pending - Orange
     };
 
-    // UI Components
     private JPanel barChartPanel;
     private JPanel legendPanel;
 
-    // Data holders
     private int[] statusCounts;
     private double[] statusPercentages;
     private double[] statusAmounts;
     private int totalTransactions;
     private double totalAmount;
 
-    // Formatters
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
     private final NumberFormat percentFormat = NumberFormat.getPercentInstance();
 
@@ -50,8 +45,6 @@ public class TransactionStatusPanel extends JPanel {
      */
     public TransactionStatusPanel(DatabaseManager dbManager) {
         this.connection = dbManager.getConnection();
-
-        // Initialize data arrays
         statusCounts = new int[STATUS_TYPES.length];
         statusPercentages = new double[STATUS_TYPES.length];
         statusAmounts = new double[STATUS_TYPES.length];
@@ -59,10 +52,7 @@ public class TransactionStatusPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(5, 5, 5, 5));
 
-        // Initialize UI components
         initComponents();
-
-        // Load initial data
         refreshData();
     }
 
@@ -70,12 +60,10 @@ public class TransactionStatusPanel extends JPanel {
      * Initialize UI components.
      */
     private void initComponents() {
-        // Title label
         JLabel titleLabel = new JLabel("Transaction Status Breakdown", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
         add(titleLabel, BorderLayout.NORTH);
 
-        // Create chart panel
         barChartPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -86,7 +74,6 @@ public class TransactionStatusPanel extends JPanel {
         barChartPanel.setBackground(Color.WHITE);
         add(barChartPanel, BorderLayout.CENTER);
 
-        // Create legend panel
         legendPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
         legendPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -94,7 +81,6 @@ public class TransactionStatusPanel extends JPanel {
             JPanel item = createLegendItem(STATUS_TYPES[i], STATUS_COLORS[i]);
             legendPanel.add(item);
         }
-
         add(legendPanel, BorderLayout.SOUTH);
     }
 
@@ -156,7 +142,6 @@ public class TransactionStatusPanel extends JPanel {
      * @throws SQLException If a database error occurs
      */
     private void loadTransactionStatusData() throws SQLException {
-        // Reset counters
         totalTransactions = 0;
         totalAmount = 0;
 
@@ -165,7 +150,6 @@ public class TransactionStatusPanel extends JPanel {
             statusAmounts[i] = 0;
         }
 
-        // Query database for transaction status breakdown
         String query = "SELECT " +
                 "    status, " +
                 "    COUNT(*) as count, " +
@@ -181,7 +165,6 @@ public class TransactionStatusPanel extends JPanel {
                 int count = rs.getInt("count");
                 double amount = rs.getDouble("total_amount");
 
-                // Map status to index
                 int index = getStatusIndex(status);
                 if (index >= 0) {
                     statusCounts[index] = count;
@@ -193,7 +176,6 @@ public class TransactionStatusPanel extends JPanel {
             }
         }
 
-        // Calculate percentages
         for (int i = 0; i < STATUS_TYPES.length; i++) {
             statusPercentages[i] = totalTransactions > 0 ?
                     (double) statusCounts[i] / totalTransactions : 0;
@@ -228,24 +210,20 @@ public class TransactionStatusPanel extends JPanel {
         int height = getHeight();
 
         int barWidth = width / (STATUS_TYPES.length * 2 + 1);
-        int maxBarHeight = height - 60;  // Leave space for labels
+        int maxBarHeight = height - 60;
 
-        // Draw bars
         for (int i = 0; i < STATUS_TYPES.length; i++) {
-            // Skip if no data
             if (statusCounts[i] == 0) continue;
 
             int x = (i * 2 + 1) * barWidth;
             int barHeight = (int) (statusPercentages[i] * maxBarHeight);
             int y = height - 40 - barHeight;
 
-            // Draw bar
             g2d.setColor(STATUS_COLORS[i]);
             g2d.fillRect(x, y, barWidth, barHeight);
             g2d.setColor(Color.BLACK);
             g2d.drawRect(x, y, barWidth, barHeight);
 
-            // Draw count and percentage at top of bar
             String countText = String.valueOf(statusCounts[i]);
             String percentText = percentFormat.format(statusPercentages[i]);
             FontMetrics fm = g2d.getFontMetrics();
@@ -253,13 +231,10 @@ public class TransactionStatusPanel extends JPanel {
             int countWidth = fm.stringWidth(countText);
             int percentWidth = fm.stringWidth(percentText);
 
-            // Draw count
             g2d.drawString(countText, x + (barWidth - countWidth) / 2, y - 20);
 
-            // Draw percentage
             g2d.drawString(percentText, x + (barWidth - percentWidth) / 2, y - 5);
 
-            // Draw amount at bottom of bar
             String amountText = currencyFormat.format(statusAmounts[i]);
             int amountWidth = fm.stringWidth(amountText);
             g2d.drawString(amountText, x + (barWidth - amountWidth) / 2, height - 5);

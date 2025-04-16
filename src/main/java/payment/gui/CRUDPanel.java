@@ -9,7 +9,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +17,6 @@ import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import payment.database.DatabaseManager;
@@ -59,7 +57,6 @@ public class CRUDPanel extends JPanel {
      */
     private final Connection connection;
 
-    // UI Components
     /**
      * Dropdown for selecting database tables
      */
@@ -110,7 +107,6 @@ public class CRUDPanel extends JPanel {
      */
     private JLabel statusLabel;
 
-    // Current table context
     /**
      * Name of the currently selected table
      */
@@ -161,17 +157,12 @@ public class CRUDPanel extends JPanel {
 
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // Initialize collections
         columnNames = new ArrayList<>();
         formFields = new HashMap<>();
         columnTypes = new HashMap<>();
-        currentTable = null; // Explicitly initialize to null
-
-        // Create UI Components
+        currentTable = null;
         initComponents();
 
-        // Load tables
         populateTableComboBox();
     }
 
@@ -192,21 +183,17 @@ public class CRUDPanel extends JPanel {
      * </p>
      */
     private void initComponents() {
-        // Create header panel
         JPanel headerPanel = createHeaderPanel();
         add(headerPanel, BorderLayout.NORTH);
 
-        // Create main panel with form and data
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setResizeWeight(0.3); // 30% to form, 70% to data
+        splitPane.setResizeWeight(0.3);
 
-        // Create form panel (left side)
         JPanel leftPanel = new JPanel(new BorderLayout());
         formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         leftPanel.add(new JScrollPane(formPanel), BorderLayout.CENTER);
 
-        // Create button panel
         buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         createButton = new JButton("Create");
         createButton.addActionListener(this::createRecord);
@@ -220,7 +207,6 @@ public class CRUDPanel extends JPanel {
         buttonPanel.add(deleteButton);
         leftPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Create data panel (right side)
         JPanel rightPanel = new JPanel(new BorderLayout());
         tableModel = new DefaultTableModel();
         dataTable = new JTable(tableModel);
@@ -233,21 +219,17 @@ public class CRUDPanel extends JPanel {
 
         rightPanel.add(new JScrollPane(dataTable), BorderLayout.CENTER);
 
-        // Add refresh button
         JPanel refreshPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         refreshButton = new JButton("Refresh Data");
         refreshButton.addActionListener(e -> loadTableData());
         refreshPanel.add(refreshButton);
         rightPanel.add(refreshPanel, BorderLayout.NORTH);
 
-        // Add panels to split pane
         splitPane.setLeftComponent(leftPanel);
         splitPane.setRightComponent(rightPanel);
 
-        // Add split pane to main panel
         add(splitPane, BorderLayout.CENTER);
 
-        // Create status bar
         statusLabel = new JLabel("Ready");
         statusLabel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEtchedBorder(),
@@ -270,15 +252,12 @@ public class CRUDPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(0, 0, 10, 0));
 
-        // Title label
         JLabel titleLabel = new JLabel("Database CRUD Operations");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         panel.add(titleLabel, BorderLayout.WEST);
 
-        // Controls panel
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        // Table combobox
         tableComboBox = new JComboBox<>();
         tableComboBox.setPreferredSize(new Dimension(200, 25));
         tableComboBox.addActionListener(e -> {
@@ -312,13 +291,11 @@ public class CRUDPanel extends JPanel {
      */
     private void populateTableComboBox() {
         try {
-            tableComboBox.removeAllItems(); // Clear existing items
+            tableComboBox.removeAllItems();
 
-            // Get tables from the database schema that actually exist
             List<String> existingTables = new ArrayList<>();
 
             try {
-                // Get table names from visa_final_spring schema
                 String query = "SELECT table_name FROM information_schema.tables " +
                         "WHERE table_schema = 'visa_final_spring' AND table_type = 'BASE TABLE'";
 
@@ -332,24 +309,20 @@ public class CRUDPanel extends JPanel {
                     }
                 }
             } catch (SQLException e) {
-                // Fallback to metadata approach if the information_schema query fails
                 DatabaseMetaData metaData = connection.getMetaData();
                 ResultSet tables = metaData.getTables(null, null, "%", new String[]{"TABLE"});
 
                 while (tables.next()) {
                     String tableName = tables.getString("TABLE_NAME");
-                    // Skip system tables
                     if (!tableName.startsWith("sys_") && !tableName.startsWith("information_schema")) {
                         existingTables.add(tableName);
                     }
                 }
             }
 
-            // Add confirmed tables to the combo box
             boolean hasValidTables = false;
             for (String tableName : existingTables) {
                 try {
-                    // Verify table structure can be accessed
                     PreparedStatement pstmt = connection.prepareStatement(
                             "SELECT * FROM " + tableName + " LIMIT 0");
                     pstmt.executeQuery();
@@ -358,12 +331,10 @@ public class CRUDPanel extends JPanel {
                     tableComboBox.addItem(tableName);
                     hasValidTables = true;
                 } catch (SQLException e) {
-                    // Skip tables that can't be queried
                     System.err.println("Skipping inaccessible table: " + tableName + " - " + e.getMessage());
                 }
             }
 
-            // Set the first table as selected if available
             if (tableComboBox.getItemCount() > 0) {
                 currentTable = tableComboBox.getItemAt(0);
                 loadTableStructure();
@@ -393,13 +364,11 @@ public class CRUDPanel extends JPanel {
      */
     private void loadTableStructure() {
         try {
-            // Clear existing form fields
             formFields.clear();
             columnNames.clear();
             columnTypes.clear();
             formPanel.removeAll();
 
-            // Get table metadata
             String query = "SELECT COLUMN_NAME, DATA_TYPE, COLUMN_KEY " +
                     "FROM INFORMATION_SCHEMA.COLUMNS " +
                     "WHERE TABLE_SCHEMA = 'visa_final_spring' " +
@@ -409,7 +378,6 @@ public class CRUDPanel extends JPanel {
             stmt.setString(1, currentTable);
             ResultSet rs = stmt.executeQuery();
 
-            // Create form fields for each column
             while (rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
                 String dataType = rs.getString("DATA_TYPE");
@@ -422,11 +390,9 @@ public class CRUDPanel extends JPanel {
                     primaryKeyColumn = columnName;
                 }
 
-                // Create label
                 JLabel label = new JLabel(columnName + ":");
                 label.setPreferredSize(new Dimension(150, 25));
 
-                // Create input field based on data type
                 JComponent field;
                 if (dataType.contains("char") || dataType.contains("text")) {
                     field = new JTextField(20);
@@ -438,19 +404,15 @@ public class CRUDPanel extends JPanel {
                     field = new JTextField(20);
                 }
 
-                // Add to form fields map
                 formFields.put(columnName, field);
 
-                // Create panel for this field
                 JPanel fieldPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
                 fieldPanel.add(label);
                 fieldPanel.add(field);
 
-                // Add to form panel
                 formPanel.add(fieldPanel);
             }
 
-            // Refresh the form panel
             formPanel.revalidate();
             formPanel.repaint();
 
@@ -468,22 +430,18 @@ public class CRUDPanel extends JPanel {
      */
     private void loadTableData() {
         try {
-            // Create query
             String query = "SELECT * FROM " + currentTable;
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(query);
 
-            // Get metadata for column names
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
 
-            // Create column names array
             String[] columnNames = new String[columnCount];
             for (int i = 0; i < columnCount; i++) {
                 columnNames[i] = metaData.getColumnLabel(i + 1);
             }
 
-            // Create new table model
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -491,7 +449,6 @@ public class CRUDPanel extends JPanel {
                 }
             };
 
-            // Add data to table model
             while (rs.next()) {
                 Object[] rowData = new Object[columnCount];
                 for (int i = 0; i < columnCount; i++) {
@@ -500,10 +457,8 @@ public class CRUDPanel extends JPanel {
                 tableModel.addRow(rowData);
             }
 
-            // Update table with new model
             dataTable.setModel(tableModel);
 
-            // Update status
             statusLabel.setText(tableModel.getRowCount() + " records found");
 
         } catch (SQLException e) {
@@ -531,7 +486,6 @@ public class CRUDPanel extends JPanel {
             if (field instanceof JTextField) {
                 ((JTextField) field).setText(value != null ? value.toString() : "");
             }
-            // Add more component types as needed
         }
     }
 
@@ -547,7 +501,6 @@ public class CRUDPanel extends JPanel {
      */
     private void createRecord(ActionEvent e) {
         try {
-            // Build INSERT query
             StringBuilder query = new StringBuilder("INSERT INTO " + currentTable + " (");
             StringBuilder values = new StringBuilder("VALUES (");
             List<Object> parameters = new ArrayList<>();
@@ -557,7 +510,6 @@ public class CRUDPanel extends JPanel {
                 JComponent field = formFields.get(columnName);
                 String value = field instanceof JTextField ? ((JTextField) field).getText() : "";
 
-                // Skip empty fields for auto-increment columns
                 if (columnName.equals(primaryKeyColumn) && value.isEmpty()) {
                     continue;
                 }
@@ -575,7 +527,6 @@ public class CRUDPanel extends JPanel {
 
             query.append(") ").append(values).append(")");
 
-            // Execute query
             PreparedStatement stmt = connection.prepareStatement(query.toString());
             for (int i = 0; i < parameters.size(); i++) {
                 stmt.setString(i + 1, parameters.get(i).toString());
@@ -584,7 +535,7 @@ public class CRUDPanel extends JPanel {
             int result = stmt.executeUpdate();
             if (result > 0) {
                 statusLabel.setText("Record created successfully");
-                loadTableData(); // Refresh table
+                loadTableData();
                 clearForm();
             }
 
@@ -613,7 +564,6 @@ public class CRUDPanel extends JPanel {
         }
 
         try {
-            // Build UPDATE query
             StringBuilder query = new StringBuilder("UPDATE " + currentTable + " SET ");
             List<Object> parameters = new ArrayList<>();
             String primaryKeyValue = null;
@@ -640,7 +590,6 @@ public class CRUDPanel extends JPanel {
             query.append(" WHERE ").append(primaryKeyColumn).append(" = ?");
             parameters.add(primaryKeyValue);
 
-            // Execute query
             PreparedStatement stmt = connection.prepareStatement(query.toString());
             for (int i = 0; i < parameters.size(); i++) {
                 stmt.setString(i + 1, parameters.get(i).toString());
@@ -649,7 +598,7 @@ public class CRUDPanel extends JPanel {
             int result = stmt.executeUpdate();
             if (result > 0) {
                 statusLabel.setText("Record updated successfully");
-                loadTableData(); // Refresh table
+                loadTableData();
             }
 
         } catch (SQLException ex) {
@@ -684,11 +633,9 @@ public class CRUDPanel extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                // Get primary key value
                 int primaryKeyIndex = columnNames.indexOf(primaryKeyColumn);
                 Object primaryKeyValue = dataTable.getValueAt(selectedRow, primaryKeyIndex);
 
-                // Execute DELETE query
                 String query = "DELETE FROM " + currentTable + " WHERE " + primaryKeyColumn + " = ?";
                 PreparedStatement stmt = connection.prepareStatement(query);
                 stmt.setObject(1, primaryKeyValue);
@@ -696,7 +643,7 @@ public class CRUDPanel extends JPanel {
                 int result = stmt.executeUpdate();
                 if (result > 0) {
                     statusLabel.setText("Record deleted successfully");
-                    loadTableData(); // Refresh table
+                    loadTableData();
                     clearForm();
                 }
 
@@ -714,7 +661,6 @@ public class CRUDPanel extends JPanel {
             if (field instanceof JTextField) {
                 ((JTextField) field).setText("");
             }
-            // Add more component types as needed
         }
     }
 

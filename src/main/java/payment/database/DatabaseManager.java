@@ -61,7 +61,6 @@ public class DatabaseManager {
      */
     private static Connection connection;
 
-    // Database connection parameters
     /**
      * Default database URL for MySQL connection
      */
@@ -143,10 +142,8 @@ public class DatabaseManager {
         }
 
         try {
-            // Load the MySQL JDBC driver
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            // Establish connection
             connection = DriverManager.getConnection(url, user, password);
             LOGGER.log(Level.INFO, "Database connection established successfully");
             return connection;
@@ -255,88 +252,4 @@ public class DatabaseManager {
         return statement.executeUpdate(query);
     }
 
-    /**
-     * Create a prepared statement for the given SQL query.
-     * <p>
-     * This method creates a PreparedStatement object for the provided SQL query.
-     * Prepared statements are more efficient for repeated executions and
-     * protect against SQL injection when used correctly with parameterized queries.
-     * The caller is responsible for setting parameter values and closing the
-     * PreparedStatement object after use.
-     * </p>
-     *
-     * @param sql The SQL query or update statement with parameter placeholders (?)
-     * @return The PreparedStatement object ready for parameter binding
-     * @throws SQLException             If the connection is null or a database access error occurs
-     * @throws IllegalArgumentException If the SQL statement is null or empty
-     */
-    public PreparedStatement prepareStatement(String sql) throws SQLException {
-        if (connection == null) {
-            throw new SQLException("Database connection not established");
-        }
-        if (sql == null || sql.trim().isEmpty()) {
-            throw new IllegalArgumentException("SQL statement cannot be null or empty");
-        }
-
-        return connection.prepareStatement(sql);
-    }
-
-    /**
-     * Execute a stored procedure with the given name and parameters.
-     * <p>
-     * This method creates a CallableStatement for executing a stored procedure
-     * in the database. It provides a simplified interface for calling procedures
-     * with IN parameters.
-     * </p>
-     *
-     * @param procedureName The name of the stored procedure to call
-     * @param params        The parameters to pass to the stored procedure
-     * @return The ResultSet returned by the stored procedure, if any
-     * @throws SQLException             If the connection is null or a database access error occurs
-     * @throws IllegalArgumentException If the procedure name is null or empty
-     */
-    public ResultSet callProcedure(String procedureName, Object... params) throws SQLException {
-        if (connection == null) {
-            throw new SQLException("Database connection not established");
-        }
-        if (procedureName == null || procedureName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Procedure name cannot be null or empty");
-        }
-
-        // Build the procedure call string with parameter placeholders
-        StringBuilder callString = new StringBuilder("{CALL ");
-        callString.append(procedureName);
-        callString.append("(");
-
-        if (params != null && params.length > 0) {
-            for (int i = 0; i < params.length; i++) {
-                if (i > 0) {
-                    callString.append(", ");
-                }
-                callString.append("?");
-            }
-        }
-
-        callString.append(")}");
-
-        // Create and prepare the callable statement
-        CallableStatement stmt = connection.prepareCall(callString.toString());
-
-        // Set the parameter values
-        if (params != null) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-        }
-
-        // Execute the procedure
-        boolean hasResults = stmt.execute();
-
-        // Return the result set if available
-        if (hasResults) {
-            return stmt.getResultSet();
-        }
-
-        return null;
-    }
 }

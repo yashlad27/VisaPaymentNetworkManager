@@ -20,13 +20,11 @@ public class TimeHeatmapPanel extends JPanel {
     private final Connection connection;
     private boolean viewByCount;
 
-    // UI Components
     private JPanel heatmapPanel;
     private JLabel legendLabel;
 
-    // Color scale for heatmap
-    private final Color MIN_COLOR = new Color(220, 237, 255); // Light blue
-    private final Color MAX_COLOR = new Color(0, 53, 128);    // Dark blue
+    private final Color MIN_COLOR = new Color(220, 237, 255);
+    private final Color MAX_COLOR = new Color(0, 53, 128);
 
     /**
      * Constructor for the time heatmap panel.
@@ -42,10 +40,7 @@ public class TimeHeatmapPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Create UI Components
         initComponents();
-
-        // Load initial data
         refreshData();
     }
 
@@ -53,16 +48,12 @@ public class TimeHeatmapPanel extends JPanel {
      * Initialize UI components.
      */
     private void initComponents() {
-        // Add description label
         JLabel descLabel = new JLabel("Heatmap showing transaction density by day of week and hour");
         descLabel.setBorder(new EmptyBorder(0, 0, 10, 0));
         add(descLabel, BorderLayout.NORTH);
 
-        // Create heatmap panel
         heatmapPanel = new JPanel(new GridLayout(8, 25));
         add(new JScrollPane(heatmapPanel), BorderLayout.CENTER);
-
-        // Create legend panel for color scale
         JPanel legendPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         legendPanel.setBorder(new EmptyBorder(10, 0, 0, 0));
 
@@ -82,7 +73,6 @@ public class TimeHeatmapPanel extends JPanel {
         legendPanel.add(colorScale);
         legendPanel.add(new JLabel("High"));
 
-        // Add transaction count/value label
         legendLabel = new JLabel(viewByCount ? "Transaction Count" : "Transaction Value ($)");
         legendPanel.add(Box.createHorizontalStrut(20));
         legendPanel.add(legendLabel);
@@ -131,7 +121,6 @@ public class TimeHeatmapPanel extends JPanel {
      * @throws SQLException If a database error occurs
      */
     private void updateHeatmap() throws SQLException {
-        // Query for transaction data by day of week and hour
         String query = "SELECT " +
                 "    DAYOFWEEK(timestamp) as day_num, " +
                 "    HOUR(timestamp) as hour_num, " +
@@ -141,7 +130,6 @@ public class TimeHeatmapPanel extends JPanel {
                 "GROUP BY DAYOFWEEK(timestamp), HOUR(timestamp) " +
                 "ORDER BY DAYOFWEEK(timestamp), HOUR(timestamp)";
 
-        // Store results in a map for easy lookup: key is "day_hour", value is count or amount
         Map<String, Double> dataMap = new HashMap<>();
         double maxValue = 0;
 
@@ -164,44 +152,35 @@ public class TimeHeatmapPanel extends JPanel {
             }
         }
 
-        // Final data and maxValue for use in SwingUtilities.invokeLater
         final Map<String, Double> finalDataMap = dataMap;
         final double finalMaxValue = maxValue;
 
-        // Update UI on EDT
         SwingUtilities.invokeLater(() -> {
             heatmapPanel.removeAll();
 
-            // Add hour labels at the top
-            heatmapPanel.add(new JLabel(""));  // Empty corner cell
+            heatmapPanel.add(new JLabel(""));
             for (int h = 0; h < 24; h++) {
                 JLabel hourLabel = new JLabel(getHourLabel(h), SwingConstants.CENTER);
                 hourLabel.setFont(new Font(hourLabel.getFont().getName(), Font.PLAIN, 10));
                 heatmapPanel.add(hourLabel);
             }
 
-            // Add rows for each day of week
             String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
             for (int d = 1; d <= 7; d++) {
-                // Add day label
                 JLabel dayLabel = new JLabel(days[d - 1], SwingConstants.RIGHT);
                 dayLabel.setBorder(new EmptyBorder(0, 5, 0, 5));
                 heatmapPanel.add(dayLabel);
 
-                // Add cells for each hour of the day
                 for (int h = 0; h < 24; h++) {
                     String key = d + "_" + h;
                     double value = finalDataMap.getOrDefault(key, 0.0);
 
-                    // Create cell panel with color based on value
                     JPanel cell = new JPanel(new BorderLayout());
                     cell.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-                    // Calculate color based on value relative to max
                     float ratio = finalMaxValue > 0 ? (float) (value / finalMaxValue) : 0;
                     cell.setBackground(getColor(ratio));
 
-                    // Add value label if there's data
                     if (value > 0) {
                         JLabel valueLabel = new JLabel(formatValue(value), SwingConstants.CENTER);
                         valueLabel.setFont(new Font(valueLabel.getFont().getName(), Font.PLAIN, 9));

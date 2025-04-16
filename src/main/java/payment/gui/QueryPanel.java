@@ -48,7 +48,6 @@ public class QueryPanel extends JPanel {
      */
     private final Connection connection;
 
-    // UI Components
     /**
      * Text area for entering SQL queries
      */
@@ -110,7 +109,6 @@ public class QueryPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Create UI Components
         initComponents();
     }
 
@@ -130,26 +128,20 @@ public class QueryPanel extends JPanel {
      * </p>
      */
     private void initComponents() {
-        // Create title and control panel at the top
         JPanel headerPanel = createHeaderPanel();
         add(headerPanel, BorderLayout.NORTH);
 
-        // Create main panel with split pane
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        splitPane.setResizeWeight(0.3); // 30% to query, 70% to results
+        splitPane.setResizeWeight(0.3);
 
-        // Create query input panel
         JPanel queryPanel = createQueryPanel();
         splitPane.setTopComponent(queryPanel);
 
-        // Create results panel
         JPanel resultsPanel = createResultsPanel();
         splitPane.setBottomComponent(resultsPanel);
 
-        // Add split pane to main panel
         add(splitPane, BorderLayout.CENTER);
 
-        // Create status bar at the bottom
         statusLabel = new JLabel("Ready");
         statusLabel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEtchedBorder(),
@@ -172,15 +164,12 @@ public class QueryPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(0, 0, 10, 0));
 
-        // Title label
         JLabel titleLabel = new JLabel("Custom SQL Query");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         panel.add(titleLabel, BorderLayout.WEST);
 
-        // Controls panel
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        // Saved queries combobox
         String[] savedQueries = {
                 "Select a saved query...",
                 "Transaction Count by Card Type",
@@ -220,14 +209,12 @@ public class QueryPanel extends JPanel {
                 TitledBorder.TOP
         ));
 
-        // Create text area for query input
         queryTextArea = new JTextArea();
         queryTextArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
         queryTextArea.setLineWrap(true);
         queryTextArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(queryTextArea);
 
-        // Create button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         clearButton = new JButton("Clear");
@@ -243,7 +230,6 @@ public class QueryPanel extends JPanel {
         buttonPanel.add(saveButton);
         buttonPanel.add(executeButton);
 
-        // Add components to panel
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -268,12 +254,10 @@ public class QueryPanel extends JPanel {
                 TitledBorder.TOP
         ));
 
-        // Create table for query results
         resultTableModel = new DefaultTableModel();
         resultTable = new JTable(resultTableModel);
         JScrollPane scrollPane = new JScrollPane(resultTable);
 
-        // Add table to panel
         panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
@@ -323,7 +307,6 @@ public class QueryPanel extends JPanel {
         );
 
         if (name != null && !name.trim().isEmpty()) {
-            // In a real application, this would save to a database or file
             JOptionPane.showMessageDialog(
                     this,
                     "Query saved as: " + name,
@@ -350,7 +333,6 @@ public class QueryPanel extends JPanel {
             return;
         }
 
-        // Execute query in a separate thread to avoid freezing UI
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
@@ -373,12 +355,12 @@ public class QueryPanel extends JPanel {
     private void loadSavedQuery(ActionEvent e) {
         int selectedIndex = savedQueriesCombo.getSelectedIndex();
         if (selectedIndex == 0) {
-            return; // "Select a saved query..." item
+            return;
         }
 
         String query = "";
         switch (selectedIndex) {
-            case 1: // Transaction Count by Card Type
+            case 1:
                 query = "SELECT \n" +
                         "    c.card_type, \n" +
                         "    COUNT(t.transaction_id) as transaction_count, \n" +
@@ -389,7 +371,7 @@ public class QueryPanel extends JPanel {
                         "GROUP BY c.card_type \n" +
                         "ORDER BY transaction_count DESC";
                 break;
-            case 2: // Top 10 Merchants by Volume
+            case 2:
                 query = "SELECT \n" +
                         "    pm.merchant_name, \n" +
                         "    pm.merchant_category, \n" +
@@ -402,7 +384,7 @@ public class QueryPanel extends JPanel {
                         "ORDER BY transaction_count DESC \n" +
                         "LIMIT 10";
                 break;
-            case 3: // Monthly Transaction Totals
+            case 3:
                 query = "SELECT \n" +
                         "    DATE_FORMAT(timestamp, '%Y-%m') as year_month, \n" +
                         "    COUNT(*) as transaction_count, \n" +
@@ -412,7 +394,7 @@ public class QueryPanel extends JPanel {
                         "GROUP BY DATE_FORMAT(timestamp, '%Y-%m') \n" +
                         "ORDER BY year_month";
                 break;
-            case 4: // Bank Approval Rates
+            case 4:
                 query = "SELECT \n" +
                         "    ib.bank_name, \n" +
                         "    COUNT(t.transaction_id) as transaction_count, \n" +
@@ -424,7 +406,7 @@ public class QueryPanel extends JPanel {
                         "GROUP BY ib.bank_name \n" +
                         "ORDER BY approval_rate DESC";
                 break;
-            case 5: // Settlement Status Summary
+            case 5:
                 query = "SELECT \n" +
                         "    CASE \n" +
                         "        WHEN s.settlement_id IS NOT NULL THEN 'Settled' \n" +
@@ -440,7 +422,7 @@ public class QueryPanel extends JPanel {
         }
 
         queryTextArea.setText(query);
-        savedQueriesCombo.setSelectedIndex(0); // Reset selection
+        savedQueriesCombo.setSelectedIndex(0);
     }
 
     /**
@@ -463,23 +445,17 @@ public class QueryPanel extends JPanel {
                 executeButton.setEnabled(false);
             });
 
-            // Check if query is a SELECT statement
             boolean isSelect = query.trim().toLowerCase().startsWith("select");
 
             if (isSelect) {
-                // Execute SELECT query and get results
                 try (ResultSet rs = dbManager.executeQuery(query)) {
-                    // Get metadata
                     ResultSetMetaData metaData = rs.getMetaData();
                     int columnCount = metaData.getColumnCount();
 
-                    // Create column names vector
                     Vector<String> columnNames = new Vector<>();
                     for (int i = 1; i <= columnCount; i++) {
                         columnNames.add(metaData.getColumnLabel(i));
                     }
-
-                    // Create data vector
                     Vector<Vector<Object>> data = new Vector<>();
                     while (rs.next()) {
                         Vector<Object> row = new Vector<>();
@@ -489,7 +465,6 @@ public class QueryPanel extends JPanel {
                         data.add(row);
                     }
 
-                    // Update table model on EDT
                     final Vector<String> finalColumnNames = columnNames;
                     final Vector<Vector<Object>> finalData = data;
 
@@ -502,7 +477,6 @@ public class QueryPanel extends JPanel {
                     });
                 }
             } else {
-                // Execute non-SELECT query (INSERT, UPDATE, DELETE, etc.)
                 int rowsAffected = dbManager.executeUpdate(query);
 
                 SwingUtilities.invokeLater(() -> {
@@ -511,7 +485,6 @@ public class QueryPanel extends JPanel {
                             (endTime - startTime), rowsAffected));
                     executeButton.setEnabled(true);
 
-                    // Clear table for non-SELECT queries
                     resultTableModel.setDataVector(new Vector<>(), new Vector<>());
                 });
             }

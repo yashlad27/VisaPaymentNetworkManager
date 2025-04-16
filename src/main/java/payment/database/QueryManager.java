@@ -72,7 +72,6 @@ public class QueryManager {
     private static Map<String, String> queryCache = new HashMap<>();
 
     static {
-        // Initialize query cache with correct table names and schema
         queryCache.put(TOP_BANKS_QUERY,
                 "SELECT ab.bank_name, " +
                         "COUNT(t.transaction_id) as total_transactions, " +
@@ -127,45 +126,6 @@ public class QueryManager {
 
         PreparedStatement stmt = conn.prepareStatement(query);
         return stmt.executeQuery();
-    }
-
-    /**
-     * Execute a database analytics function with the provided parameters.
-     * <p>
-     * This method constructs a SQL query to call a stored function in the database
-     * with the specified parameters. It properly handles parameter binding and
-     * prepares the statement for execution.
-     * </p>
-     *
-     * @param functionName The name of the database function to call
-     * @param params       Variable number of parameters to pass to the function
-     * @return The ResultSet containing the function result
-     * @throws SQLException If a database error occurs during execution
-     */
-    public static ResultSet executeAnalyticsFunction(String functionName, Object... params) throws SQLException {
-        Connection conn = dbManager.getConnection();
-        try {
-            String query = "SELECT " + functionName + "(";
-
-            // Add parameters
-            for (int i = 0; i < params.length; i++) {
-                query += "?";
-                if (i < params.length - 1) {
-                    query += ", ";
-                }
-            }
-            query += ") as result";
-
-            PreparedStatement stmt = conn.prepareStatement(query);
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-
-            return stmt.executeQuery();
-        } finally {
-            // Note: Don't close the connection here as it might be reused
-            // The connection should be closed by the calling code
-        }
     }
 
     /**

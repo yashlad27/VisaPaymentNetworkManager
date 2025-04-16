@@ -23,15 +23,6 @@ import javax.swing.table.DefaultTableModel;
 
 import payment.database.DatabaseManager;
 
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.sql.CallableStatement;
-import java.sql.Types;
-
-import static payment.database.QueryManager.resultSetToList;
-
 /**
  * Panel for analyzing card usage patterns and transaction details.
  * <p>
@@ -67,7 +58,6 @@ public class CardUsagePanel extends JPanel {
      */
     private final Connection connection;
 
-    // UI Components
     /**
      * Table displaying card distribution data
      */
@@ -108,7 +98,6 @@ public class CardUsagePanel extends JPanel {
      */
     private JLabel successRateLabel;
 
-    // Table Models
     /**
      * Model for card distribution table
      */
@@ -119,7 +108,6 @@ public class CardUsagePanel extends JPanel {
      */
     private DefaultTableModel cardTransactionModel;
 
-    // Charts
     /**
      * Chart panel for card type distribution pie chart
      */
@@ -135,13 +123,11 @@ public class CardUsagePanel extends JPanel {
      */
     private ChartPanel successRateChart;
 
-    // Formatters
     /**
      * Formatter for currency values
      */
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
 
-    // Auto-refresh timer
     /**
      * Timer for automatic data refresh
      */
@@ -173,16 +159,9 @@ public class CardUsagePanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Initialize table models first
         initTableModels();
-
-        // Initialize UI components
         initComponents();
-
-        // Load initial data
         refreshData();
-
-        // Set up auto-refresh timer
         setupRefreshTimer();
     }
 
@@ -195,20 +174,13 @@ public class CardUsagePanel extends JPanel {
      * </p>
      */
     private void initComponents() {
-        // Create main panel with card layout
         JPanel mainPanel = new JPanel(new CardLayout());
 
-        // Create card usage panel
         JPanel cardUsagePanel = createCardUsagePanel();
-
-        // Create transaction details panel
         JPanel transactionPanel = createTransactionPanel();
-
-        // Add panels to main panel
         mainPanel.add(cardUsagePanel, "cardUsage");
         mainPanel.add(transactionPanel, "transactions");
 
-        // Add main panel to this panel
         add(mainPanel, BorderLayout.CENTER);
     }
 
@@ -221,7 +193,6 @@ public class CardUsagePanel extends JPanel {
      * </p>
      */
     private void initTableModels() {
-        // Card distribution table model
         String[] distributionColumns = {
                 "Card Type", "Total Cards", "Active Cards",
                 "Total Transactions", "Total Amount", "Success Rate"
@@ -234,7 +205,6 @@ public class CardUsagePanel extends JPanel {
         };
         cardDistributionTable = new JTable(cardDistributionModel);
 
-        // Card transaction table model
         String[] transactionColumns = {
                 "Timestamp", "Cardholder", "Amount", "Status",
                 "Merchant", "Auth Code", "Response"
@@ -265,7 +235,6 @@ public class CardUsagePanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Create summary labels
         totalCardsLabel = new JLabel("Total Cards: ");
         activeCardsLabel = new JLabel("Active Cards: ");
         totalTransactionsLabel = new JLabel("Total Transactions: ");
@@ -273,7 +242,6 @@ public class CardUsagePanel extends JPanel {
         avgTransactionLabel = new JLabel("Average Transaction: ");
         successRateLabel = new JLabel("Success Rate: ");
 
-        // Create info panel
         JPanel infoPanel = new JPanel(new GridLayout(6, 1, 5, 5));
         infoPanel.add(totalCardsLabel);
         infoPanel.add(activeCardsLabel);
@@ -282,7 +250,6 @@ public class CardUsagePanel extends JPanel {
         infoPanel.add(avgTransactionLabel);
         infoPanel.add(successRateLabel);
 
-        // Create charts panel
         JPanel chartsPanel = new JPanel(new GridLayout(1, 3, 10, 0));
         cardTypeChart = new ChartPanel(null);
         transactionVolumeChart = new ChartPanel(null);
@@ -291,7 +258,6 @@ public class CardUsagePanel extends JPanel {
         chartsPanel.add(transactionVolumeChart);
         chartsPanel.add(successRateChart);
 
-        // Add card distribution table
         JScrollPane tableScroll = new JScrollPane(cardDistributionTable);
         cardDistributionTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && cardDistributionTable.getSelectedRow() != -1) {
@@ -301,11 +267,9 @@ public class CardUsagePanel extends JPanel {
             }
         });
 
-        // Add components to panel
         panel.add(infoPanel, BorderLayout.NORTH);
         panel.add(chartsPanel, BorderLayout.CENTER);
         panel.add(tableScroll, BorderLayout.SOUTH);
-
         return panel;
     }
 
@@ -323,10 +287,8 @@ public class CardUsagePanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Add transaction table
         JScrollPane tableScroll = new JScrollPane(cardTransactionTable);
         panel.add(tableScroll, BorderLayout.CENTER);
-
         return panel;
     }
 
@@ -411,7 +373,6 @@ public class CardUsagePanel extends JPanel {
             cardTransactionModel.setRowCount(0);
 
             while (rs.next()) {
-                // Safely handle BigDecimal conversion for amount
                 Object amountObj = rs.getObject("amount");
                 double amount = 0.0;
                 if (amountObj instanceof BigDecimal) {
@@ -465,7 +426,6 @@ public class CardUsagePanel extends JPanel {
 
             cardDistributionModel.setRowCount(0);
             while (rs.next()) {
-                // Safely handle BigDecimal conversion
                 Object totalAmountObj = rs.getObject("total_amount");
                 double totalAmount = 0.0;
                 if (totalAmountObj instanceof BigDecimal) {
@@ -496,7 +456,6 @@ public class CardUsagePanel extends JPanel {
                 });
             }
 
-            // Update summary labels
             updateSummaryLabels();
 
         } catch (SQLException e) {
@@ -533,7 +492,6 @@ public class CardUsagePanel extends JPanel {
                 activeCardsLabel.setText("Active Cards: " + rs.getInt("active_cards"));
                 totalTransactionsLabel.setText("Total Transactions: " + rs.getInt("total_transactions"));
 
-                // Safely handle BigDecimal conversion
                 Object totalAmountObj = rs.getObject("total_amount");
                 double totalAmount = 0.0;
                 if (totalAmountObj instanceof BigDecimal) {
@@ -582,7 +540,6 @@ public class CardUsagePanel extends JPanel {
      */
     private void updateCharts() {
         try {
-            // Card Type Distribution Chart
             DefaultPieDataset cardTypeDataset = new DefaultPieDataset();
             String query = "SELECT card_type, COUNT(*) as count FROM Card GROUP BY card_type";
             Connection conn = DatabaseManager.getConnection();
@@ -601,7 +558,6 @@ public class CardUsagePanel extends JPanel {
             );
             this.cardTypeChart.setChart(cardTypeChart);
 
-            // Transaction Volume Chart
             DefaultCategoryDataset volumeDataset = new DefaultCategoryDataset();
             query = "SELECT DATE(timestamp) as date, COUNT(*) as count " +
                     "FROM Transaction " +
@@ -626,7 +582,6 @@ public class CardUsagePanel extends JPanel {
             );
             this.transactionVolumeChart.setChart(volumeChart);
 
-            // Success Rate Chart
             DefaultCategoryDataset successDataset = new DefaultCategoryDataset();
             query = "SELECT card_type, " +
                     "CASE WHEN COUNT(*) > 0 THEN " +
@@ -637,7 +592,6 @@ public class CardUsagePanel extends JPanel {
                     "GROUP BY card_type";
             rs = stmt.executeQuery(query);
             while (rs.next()) {
-                // Safely handle BigDecimal conversion
                 Object rateObj = rs.getObject("success_rate");
                 double rate = 0.0;
                 if (rateObj instanceof BigDecimal) {
@@ -670,47 +624,5 @@ public class CardUsagePanel extends JPanel {
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    // Example: Using the GetCardTransactionHistory stored procedure
-    public List<Map<String, Object>> getCardTransactionHistory(int cardId) {
-        List<Map<String, Object>> results = new ArrayList<>();
-        try (Connection conn = DatabaseManager.getConnection();
-             CallableStatement stmt = conn.prepareCall("{CALL GetCardTransactionHistory(?)}")) {
-
-            stmt.setInt(1, cardId);
-            ResultSet rs = stmt.executeQuery();
-
-            results = resultSetToList(rs);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return results;
-    }
-
-    // Example: Using the ProcessTransaction stored procedure
-    public Map<String, Object> processTransaction(BigDecimal amount, String currency,
-                                                  int cardId, int merchantId, int bankId) {
-        Map<String, Object> result = new HashMap<>();
-        try (Connection conn = DatabaseManager.getConnection();
-             CallableStatement stmt = conn.prepareCall("{CALL ProcessTransaction(?, ?, ?, ?, ?, ?, ?)}")) {
-
-            stmt.setBigDecimal(1, amount);
-            stmt.setString(2, currency);
-            stmt.setInt(3, cardId);
-            stmt.setInt(4, merchantId);
-            stmt.setInt(5, bankId);
-            stmt.registerOutParameter(6, Types.INTEGER);
-            stmt.registerOutParameter(7, Types.VARCHAR);
-
-            stmt.execute();
-
-            result.put("transaction_id", stmt.getInt(6));
-            result.put("status", stmt.getString(7));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            result.put("error", e.getMessage());
-        }
-        return result;
     }
 }

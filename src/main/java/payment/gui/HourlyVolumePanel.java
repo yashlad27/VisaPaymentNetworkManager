@@ -20,17 +20,14 @@ public class HourlyVolumePanel extends JPanel {
     private final Connection connection;
     private boolean viewByCount;
 
-    // Data arrays
     private int[] transactionCounts;
     private double[] transactionAmounts;
     private int maxCount;
     private double maxAmount;
 
-    // UI Components
     private JPanel chartPanel;
     private JLabel titleLabel;
 
-    // Formatters
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
 
     /**
@@ -43,17 +40,12 @@ public class HourlyVolumePanel extends JPanel {
         this.connection = dbManager.getConnection();
         this.viewByCount = viewByCount;
 
-        // Initialize data arrays
         transactionCounts = new int[24];
         transactionAmounts = new double[24];
 
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(5, 5, 5, 5));
-
-        // Initialize UI components
         initComponents();
-
-        // Load initial data
         refreshData();
     }
 
@@ -61,12 +53,10 @@ public class HourlyVolumePanel extends JPanel {
      * Initialize UI components.
      */
     private void initComponents() {
-        // Title label
         titleLabel = new JLabel("Hourly Transaction Volume", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
         add(titleLabel, BorderLayout.NORTH);
 
-        // Create chart panel
         chartPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -76,17 +66,6 @@ public class HourlyVolumePanel extends JPanel {
         };
         chartPanel.setBackground(Color.WHITE);
         add(chartPanel, BorderLayout.CENTER);
-    }
-
-    /**
-     * Set whether to view by count or amount.
-     *
-     * @param viewByCount True to view by count, false to view by amount
-     */
-    public void setViewByCount(boolean viewByCount) {
-        this.viewByCount = viewByCount;
-        titleLabel.setText("Hourly Transaction " + (viewByCount ? "Count" : "Volume"));
-        repaint();
     }
 
     /**
@@ -154,7 +133,6 @@ public class HourlyVolumePanel extends JPanel {
                     transactionCounts[hour] = count;
                     transactionAmounts[hour] = amount;
 
-                    // Update max values
                     if (count > maxCount) {
                         maxCount = count;
                     }
@@ -178,21 +156,18 @@ public class HourlyVolumePanel extends JPanel {
         int width = getWidth();
         int height = getHeight();
 
-        // Chart dimensions
         int chartX = 50;
         int chartY = 30;
         int chartWidth = width - chartX - 20;
         int chartHeight = height - chartY - 50;
 
-        // Draw chart axes
         g2d.setColor(Color.BLACK);
-        g2d.drawLine(chartX, chartY, chartX, chartY + chartHeight);  // Y-axis
-        g2d.drawLine(chartX, chartY + chartHeight, chartX + chartWidth, chartY + chartHeight);  // X-axis
+        g2d.drawLine(chartX, chartY, chartX, chartY + chartHeight);
+        g2d.drawLine(chartX, chartY + chartHeight, chartX + chartWidth, chartY + chartHeight);
 
-        // Draw X-axis labels (hours)
-        for (int i = 0; i < 24; i += 2) {  // Draw every 2 hours to avoid crowding
+        for (int i = 0; i < 24; i += 2) {
             int x = chartX + (i * chartWidth / 23);
-            g2d.drawLine(x, chartY + chartHeight, x, chartY + chartHeight + 5);  // Tick mark
+            g2d.drawLine(x, chartY + chartHeight, x, chartY + chartHeight + 5);
 
             String hourLabel = formatHour(i);
             FontMetrics fm = g2d.getFontMetrics();
@@ -201,11 +176,10 @@ public class HourlyVolumePanel extends JPanel {
             g2d.drawString(hourLabel, x - labelWidth / 2, chartY + chartHeight + 20);
         }
 
-        // Draw Y-axis labels
         int yDivisions = 5;
         for (int i = 0; i <= yDivisions; i++) {
             int y = chartY + chartHeight - (i * chartHeight / yDivisions);
-            g2d.drawLine(chartX - 5, y, chartX, y);  // Tick mark
+            g2d.drawLine(chartX - 5, y, chartX, y);
 
             double value = viewByCount ?
                     maxCount * i / yDivisions :
@@ -221,7 +195,6 @@ public class HourlyVolumePanel extends JPanel {
             g2d.drawString(label, chartX - labelWidth - 10, y + fm.getAscent() / 2);
         }
 
-        // Draw data line
         int[] xPoints = new int[24];
         int[] yPoints = new int[24];
 
@@ -231,36 +204,29 @@ public class HourlyVolumePanel extends JPanel {
             double value = viewByCount ? transactionCounts[i] : transactionAmounts[i];
             double maxValue = viewByCount ? maxCount : maxAmount;
 
-            // Calculate y position (reversed since 0,0 is top-left)
             double ratio = maxValue > 0 ? value / maxValue : 0;
             yPoints[i] = chartY + chartHeight - (int) (ratio * chartHeight);
         }
 
-        // Draw filled area under the line
         int[] areaXPoints = new int[26];
         int[] areaYPoints = new int[26];
 
-        // Copy line points
         System.arraycopy(xPoints, 0, areaXPoints, 0, 24);
         System.arraycopy(yPoints, 0, areaYPoints, 0, 24);
 
-        // Add bottom corners to create a closed polygon
         areaXPoints[24] = chartX + chartWidth;
         areaYPoints[24] = chartY + chartHeight;
         areaXPoints[25] = chartX;
         areaYPoints[25] = chartY + chartHeight;
 
-        // Draw filled area with transparency
-        g2d.setColor(new Color(0, 120, 215, 64));  // Semi-transparent blue
+        g2d.setColor(new Color(0, 120, 215, 64));
         g2d.fillPolygon(areaXPoints, areaYPoints, 26);
 
-        // Draw the line itself
-        g2d.setColor(new Color(0, 102, 204));  // Blue line
+        g2d.setColor(new Color(0, 102, 204));
         g2d.setStroke(new BasicStroke(2));
         g2d.drawPolyline(xPoints, yPoints, 24);
 
-        // Draw data points
-        g2d.setColor(new Color(30, 144, 255));  // Dodger blue
+        g2d.setColor(new Color(30, 144, 255));
         for (int i = 0; i < 24; i++) {
             double value = viewByCount ? transactionCounts[i] : transactionAmounts[i];
             if (value > 0) {

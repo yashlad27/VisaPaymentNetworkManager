@@ -55,7 +55,6 @@ public class DashboardPanel extends JPanel {
      */
     private final Connection connection;
 
-    // UI Components for KPI section
     /**
      * Label showing total number of transactions
      */
@@ -81,7 +80,6 @@ public class DashboardPanel extends JPanel {
      */
     private JLabel successRateLabel;
 
-    // UI Components for data tables
     /**
      * Table displaying top merchant performance data
      */
@@ -102,7 +100,6 @@ public class DashboardPanel extends JPanel {
      */
     private DefaultTableModel cardTypeTableModel;
 
-    // UI Components for visualizations
     /**
      * Panel showing transaction status distribution
      */
@@ -113,7 +110,6 @@ public class DashboardPanel extends JPanel {
      */
     private payment.gui.HourlyVolumePanel hourlyVolumePanel;
 
-    // Formatters
     /**
      * Formatter for percentage values
      */
@@ -124,7 +120,6 @@ public class DashboardPanel extends JPanel {
      */
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
 
-    // Auto-refresh timer
     /**
      * Timer for automatic data refresh
      */
@@ -133,7 +128,7 @@ public class DashboardPanel extends JPanel {
     /**
      * Interval for automatic data refresh (in milliseconds)
      */
-    private final int REFRESH_INTERVAL = 60000; // 1 minute
+    private final int REFRESH_INTERVAL = 60000;
 
     /**
      * Constructor for the dashboard panel.
@@ -156,13 +151,8 @@ public class DashboardPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Create UI Components
         initComponents();
-
-        // Load initial data
         refreshData();
-
-        // Set up auto-refresh timer
         setupRefreshTimer();
     }
 
@@ -182,20 +172,15 @@ public class DashboardPanel extends JPanel {
      * </p>
      */
     private void initComponents() {
-        // Create title and control panel at the top
         JPanel headerPanel = createHeaderPanel();
         add(headerPanel, BorderLayout.NORTH);
 
-        // Create main content panel
         JPanel contentPanel = new JPanel(new GridBagLayout());
 
-        // Create KPI panel (top section)
         JPanel kpiPanel = createKPIPanel();
 
-        // Create charts panel (middle section)
         JPanel chartsPanel = createChartsPanel();
 
-        // Add panels to content with GridBagLayout
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -209,7 +194,6 @@ public class DashboardPanel extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
         contentPanel.add(chartsPanel, gbc);
 
-        // Add content panel to main panel
         add(new JScrollPane(contentPanel), BorderLayout.CENTER);
     }
 
@@ -227,20 +211,16 @@ public class DashboardPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(0, 0, 10, 0));
 
-        // Title label
         JLabel titleLabel = new JLabel("Payment Network Dashboard");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         panel.add(titleLabel, BorderLayout.WEST);
 
-        // Controls panel (date range, refresh)
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        // Date range combobox
-        String[] dateRanges = {"Today", "Last 7 Days", "Last 30 Days", "Custom..."};
+        String[] dateRanges = {"Today", "Last 7 Days", "Last 30 Days"};
         JComboBox<String> dateRangeCombo = new JComboBox<>(dateRanges);
         dateRangeCombo.setPreferredSize(new Dimension(120, 25));
 
-        // Refresh button
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(this::refreshButtonClicked);
 
@@ -277,7 +257,6 @@ public class DashboardPanel extends JPanel {
                 TitledBorder.TOP
         ));
 
-        // Create KPI cards
         panel.add(createKPICard("Total Transactions", "", totalTransactionsLabel = new JLabel("...")));
         panel.add(createKPICard("Total Value", "", totalValueLabel = new JLabel("...")));
         panel.add(createKPICard("Today's Count", "vs Yesterday", todayCountLabel = new JLabel("...")));
@@ -349,7 +328,6 @@ public class DashboardPanel extends JPanel {
     private JPanel createChartsPanel() {
         JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
 
-        // Card type distribution panel
         JPanel cardTypePanel = new JPanel(new BorderLayout());
         cardTypePanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(),
@@ -358,13 +336,11 @@ public class DashboardPanel extends JPanel {
                 TitledBorder.TOP
         ));
 
-        // Create card type table
         String[] cardTypeColumns = {"Card Type", "Transaction Count", "Total Amount", "% of Total"};
         cardTypeTableModel = new DefaultTableModel(cardTypeColumns, 0);
         cardTypeTable = new JTable(cardTypeTableModel);
         cardTypePanel.add(new JScrollPane(cardTypeTable), BorderLayout.CENTER);
 
-        // Transaction status panel - Using the new TransactionStatusPanel
         JPanel statusPanel = new JPanel(new BorderLayout());
         statusPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(),
@@ -373,11 +349,9 @@ public class DashboardPanel extends JPanel {
                 TitledBorder.TOP
         ));
 
-        // Create and add the new TransactionStatusPanel
         transactionStatusPanel = new payment.gui.TransactionStatusPanel(dbManager);
         statusPanel.add(transactionStatusPanel, BorderLayout.CENTER);
 
-        // Hourly volume panel - Using the new HourlyVolumePanel
         JPanel hourlyPanel = new JPanel(new BorderLayout());
         hourlyPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(),
@@ -386,11 +360,9 @@ public class DashboardPanel extends JPanel {
                 TitledBorder.TOP
         ));
 
-        // Create and add the new HourlyVolumePanel
         hourlyVolumePanel = new HourlyVolumePanel(dbManager, true);
         hourlyPanel.add(hourlyVolumePanel, BorderLayout.CENTER);
 
-        // Top merchants panel
         JPanel merchantsPanel = new JPanel(new BorderLayout());
         merchantsPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(),
@@ -399,13 +371,11 @@ public class DashboardPanel extends JPanel {
                 TitledBorder.TOP
         ));
 
-        // Create merchants table
         String[] merchantColumns = {"Merchant", "Category", "Transactions", "Total Amount"};
         merchantsTableModel = new DefaultTableModel(merchantColumns, 0);
         topMerchantsTable = new JTable(merchantsTableModel);
         merchantsPanel.add(new JScrollPane(topMerchantsTable), BorderLayout.CENTER);
 
-        // Add all panels
         panel.add(cardTypePanel);
         panel.add(statusPanel);
         panel.add(hourlyPanel);
@@ -456,7 +426,6 @@ public class DashboardPanel extends JPanel {
                     updateCardTypeDistribution();
                     updateTopMerchants();
 
-                    // Refresh the transaction status and hourly volume panels
                     transactionStatusPanel.refreshData();
                     hourlyVolumePanel.refreshData();
 
@@ -482,7 +451,6 @@ public class DashboardPanel extends JPanel {
      */
     private void updateKPIs() throws SQLException {
         try (Statement stmt = connection.createStatement()) {
-            // Total transactions
             try (ResultSet rs = stmt.executeQuery(
                     "SELECT COUNT(*) as total_transactions FROM Transaction")) {
                 if (rs.next()) {
@@ -492,7 +460,6 @@ public class DashboardPanel extends JPanel {
                 }
             }
 
-            // Total value
             try (ResultSet rs = stmt.executeQuery(
                     "SELECT SUM(amount) as total_value FROM Transaction")) {
                 if (rs.next()) {
@@ -502,7 +469,6 @@ public class DashboardPanel extends JPanel {
                 }
             }
 
-            // Today's count vs yesterday
             try (ResultSet rs = stmt.executeQuery(
                     "SELECT " +
                             "  (SELECT COUNT(*) FROM Transaction WHERE DATE(timestamp) = CURDATE()) as today_count, " +
@@ -521,7 +487,6 @@ public class DashboardPanel extends JPanel {
                 }
             }
 
-            // Today's value vs yesterday
             try (ResultSet rs = stmt.executeQuery(
                     "SELECT " +
                             "  (SELECT SUM(amount) FROM Transaction WHERE DATE(timestamp) = CURDATE()) as today_amount, " +
@@ -540,7 +505,6 @@ public class DashboardPanel extends JPanel {
                 }
             }
 
-            // Success rate
             try (ResultSet rs = stmt.executeQuery(
                     "SELECT " +
                             "ROUND((COUNT(CASE WHEN status = 'Approved' THEN 1 END) / COUNT(*)) * 100, 2) as approval_rate " +
@@ -572,10 +536,8 @@ public class DashboardPanel extends JPanel {
                             "GROUP BY c.card_type " +
                             "ORDER BY transaction_count DESC");
 
-            // Clear existing data
             SwingUtilities.invokeLater(() -> cardTypeTableModel.setRowCount(0));
 
-            // Add new data
             while (rs.next()) {
                 String cardType = rs.getString("card_type");
                 int count = rs.getInt("transaction_count");
@@ -613,10 +575,8 @@ public class DashboardPanel extends JPanel {
                             "ORDER BY transaction_count DESC " +
                             "LIMIT 10");
 
-            // Clear existing data
             SwingUtilities.invokeLater(() -> merchantsTableModel.setRowCount(0));
 
-            // Add new data
             while (rs.next()) {
                 String name = rs.getString("merchant_name");
                 String category = rs.getString("merchant_category");

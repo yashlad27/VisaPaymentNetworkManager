@@ -8,17 +8,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.NumberFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import payment.database.DatabaseManager;
-import payment.database.QueryManager;
 
 /**
  * Panel for analyzing bank performance and transaction data in the payment network.
@@ -106,7 +102,6 @@ public class BankAnalysisPanel extends JPanel {
      */
     private JLabel uniqueMerchantsLabel;
 
-    // Table Models
     /**
      * Model for issuing bank table
      */
@@ -127,13 +122,11 @@ public class BankAnalysisPanel extends JPanel {
      */
     private DefaultTableModel transactionModel;
 
-    // Formatters
     /**
      * Formatter for currency values
      */
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
 
-    // Auto-refresh timer
     /**
      * Timer for automatic data refresh
      */
@@ -165,16 +158,9 @@ public class BankAnalysisPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Initialize table models first
         initTableModels();
-
-        // Initialize UI components
         initComponents();
-
-        // Load initial data
         refreshData();
-
-        // Set up auto-refresh timer
         setupRefreshTimer();
     }
 
@@ -187,19 +173,10 @@ public class BankAnalysisPanel extends JPanel {
      * </p>
      */
     private void initComponents() {
-        // Create main panel with card layout
         JPanel mainPanel = new JPanel(new BorderLayout());
-
-        // Create bank details panel
         JPanel bankDetailsPanel = createBankDetailsPanel();
-
-        // Create transaction history panel
         JPanel transactionPanel = createTransactionPanel();
-
-        // Add panels to main panel
         mainPanel.add(bankDetailsPanel, BorderLayout.CENTER);
-
-        // Add main panel to this panel
         add(mainPanel, BorderLayout.CENTER);
     }
 
@@ -212,7 +189,6 @@ public class BankAnalysisPanel extends JPanel {
      * </p>
      */
     private void initTableModels() {
-        // Bank table model
         String[] bankColumns = {"Bank ID", "Bank Name", "Total Transactions", "Success Rate", "Total Amount"};
         issuingBankModel = new DefaultTableModel(bankColumns, 0) {
             @Override
@@ -221,13 +197,10 @@ public class BankAnalysisPanel extends JPanel {
             }
         };
         bankTable = new JTable(issuingBankModel);
-
-        // Hide the Bank ID column but keep it for selection purposes
         bankTable.getColumnModel().getColumn(0).setMinWidth(0);
         bankTable.getColumnModel().getColumn(0).setMaxWidth(0);
         bankTable.getColumnModel().getColumn(0).setPreferredWidth(0);
 
-        // Transaction table model
         String[] transactionColumns = {
                 "Timestamp", "Merchant", "Card Type", "Amount",
                 "Status", "Auth Code", "Response Code"
@@ -258,7 +231,6 @@ public class BankAnalysisPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Create labels
         bankNameLabel = new JLabel("Bank: ");
         bankCodeLabel = new JLabel("Code: ");
         totalTransactionsLabel = new JLabel("Total Transactions: ");
@@ -267,7 +239,6 @@ public class BankAnalysisPanel extends JPanel {
         successRateLabel = new JLabel("Success Rate: ");
         uniqueMerchantsLabel = new JLabel("Unique Merchants: ");
 
-        // Create info panel
         JPanel infoPanel = new JPanel(new GridLayout(7, 1, 5, 5));
         infoPanel.add(bankNameLabel);
         infoPanel.add(bankCodeLabel);
@@ -277,27 +248,22 @@ public class BankAnalysisPanel extends JPanel {
         infoPanel.add(successRateLabel);
         infoPanel.add(uniqueMerchantsLabel);
 
-        // Add bank table
         JScrollPane tableScroll = new JScrollPane(bankTable);
         bankTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && bankTable.getSelectedRow() != -1) {
-                // Get the bank ID from the hidden first column
                 selectedBankId = Integer.parseInt(bankTable.getValueAt(bankTable.getSelectedRow(), 0).toString());
                 loadBankDetails();
                 loadTransactionHistory();
             }
         });
 
-        // Create transaction panel
         JPanel transactionPanel = createTransactionPanel();
 
-        // Create split pane
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setTopComponent(tableScroll);
         splitPane.setBottomComponent(transactionPanel);
-        splitPane.setResizeWeight(0.4); // 40% top, 60% bottom
+        splitPane.setResizeWeight(0.4);
 
-        // Add components to panel
         panel.add(infoPanel, BorderLayout.NORTH);
         panel.add(splitPane, BorderLayout.CENTER);
 
@@ -318,10 +284,8 @@ public class BankAnalysisPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Add transaction table
         JScrollPane tableScroll = new JScrollPane(transactionTable);
         panel.add(tableScroll, BorderLayout.CENTER);
-
         return panel;
     }
 
@@ -377,7 +341,6 @@ public class BankAnalysisPanel extends JPanel {
      */
     private void loadBankDetails() {
         if (selectedBankId == -1) {
-            // Clear labels if no bank is selected
             bankNameLabel.setText("Bank: ");
             bankCodeLabel.setText("Code: ");
             totalTransactionsLabel.setText("Total Transactions: ");
@@ -409,12 +372,10 @@ public class BankAnalysisPanel extends JPanel {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                // Update labels with bank information
                 bankNameLabel.setText("Bank: " + rs.getString("bank_name"));
                 bankCodeLabel.setText("Code: " + rs.getString("bank_code"));
                 totalTransactionsLabel.setText("Total Transactions: " + rs.getInt("total_transactions"));
 
-                // Safely convert BigDecimal to double for amounts
                 Object totalAmountObj = rs.getObject("total_amount");
                 double totalAmount = 0.0;
                 if (totalAmountObj instanceof BigDecimal) {
@@ -445,13 +406,11 @@ public class BankAnalysisPanel extends JPanel {
                     successRate = Double.parseDouble(successRateObj.toString());
                 }
 
-                // Format and display the values
                 totalAmountLabel.setText("Total Amount: " + currencyFormat.format(totalAmount));
                 avgAmountLabel.setText("Average Amount: " + currencyFormat.format(avgAmount));
                 successRateLabel.setText("Success Rate: " + String.format("%.2f%%", successRate));
                 uniqueMerchantsLabel.setText("Unique Merchants: " + rs.getInt("unique_merchants"));
             } else {
-                // Clear labels if no data found
                 bankNameLabel.setText("Bank: N/A");
                 bankCodeLabel.setText("Code: N/A");
                 totalTransactionsLabel.setText("Total Transactions: 0");
@@ -479,12 +438,9 @@ public class BankAnalysisPanel extends JPanel {
      */
     private void loadBankPerformanceData() {
         try {
-            // First clear any existing data
             if (issuingBankModel != null) {
                 issuingBankModel.setRowCount(0);
             }
-
-            // Load acquiring bank data
             String query = "SELECT " +
                     "ab.acquiring_bank_id, " +
                     "ab.bank_name, " +
@@ -503,7 +459,6 @@ public class BankAnalysisPanel extends JPanel {
             ResultSet rs = stmt.executeQuery(query);
 
             while (rs.next()) {
-                // Safely convert BigDecimal to double
                 Object successRateObj = rs.getObject("success_rate");
                 double successRate = 0.0;
                 if (successRateObj instanceof BigDecimal) {
@@ -570,7 +525,6 @@ public class BankAnalysisPanel extends JPanel {
             transactionModel.setRowCount(0);
 
             while (rs.next()) {
-                // Safely handle BigDecimal conversion for amount
                 Object amountObj = rs.getObject("amount");
                 double amount = 0.0;
                 if (amountObj instanceof BigDecimal) {

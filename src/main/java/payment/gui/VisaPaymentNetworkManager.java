@@ -68,7 +68,6 @@ public class VisaPaymentNetworkManager extends JFrame {
      * </p>
      */
     public VisaPaymentNetworkManager() {
-        // Setup database connection
         dbManager = DatabaseManager.getInstance();
         Connection conn = dbManager.connect();
 
@@ -80,10 +79,7 @@ public class VisaPaymentNetworkManager extends JFrame {
             System.exit(1);
         }
 
-        // Setup the UI
         initUI();
-
-        // Add a window listener to disconnect from the database on close
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -118,10 +114,8 @@ public class VisaPaymentNetworkManager extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Create tabbed pane for different views
         JTabbedPane tabbedPane = new JTabbedPane();
 
-        // Create and add dashboard panels
         tabbedPane.addTab("Dashboard Overview", new DashboardPanel(dbManager));
         tabbedPane.addTab("Card Usage", new CardUsagePanel(dbManager));
         tabbedPane.addTab("Bank Analysis", new BankAnalysisPanel(dbManager));
@@ -129,10 +123,8 @@ public class VisaPaymentNetworkManager extends JFrame {
         tabbedPane.addTab("Custom Query", new QueryPanel(dbManager));
         tabbedPane.addTab("CRUD Operations", new CRUDPanel(dbManager));
 
-        // Add to content pane
         getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
-        // Add a status bar at the bottom
         JPanel statusBar = createStatusBar();
         getContentPane().add(statusBar, BorderLayout.SOUTH);
     }
@@ -154,7 +146,6 @@ public class VisaPaymentNetworkManager extends JFrame {
         JLabel statusLabel = new JLabel("  Connected to database: visa_final_spring");
 
         JLabel timeLabel = new JLabel();
-        // Update the time every second
         Timer timer = new Timer(1000, e -> {
             timeLabel.setText(new java.util.Date().toString() + "  ");
         });
@@ -177,14 +168,12 @@ public class VisaPaymentNetworkManager extends JFrame {
      * @param args Command line arguments (not used)
      */
     public static void main(String[] args) {
-        // Set look and feel to system default
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Start application on Swing EDT
         SwingUtilities.invokeLater(() -> {
             VisaPaymentNetworkManager app = new VisaPaymentNetworkManager();
             app.setVisible(true);
