@@ -1,6 +1,5 @@
 DELIMITER //
 
--- Enable event scheduler
 SET GLOBAL event_scheduler = ON //
 
 -- Create an event to deactivate expired cards
